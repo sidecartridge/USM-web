@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This repository contains **USM-web**, a single-file browser application that packages Atari ST `.PRG` / `.TOS` programs into 128 KB cartridge ROM images. It is a JavaScript port of the C tool [`atarist-USM`](https://github.com/sidecartridge/atarist-USM). See `CLAUDE.md` for architecture details and `README.md` for end-user usage.
+This repository contains **USM-web**, a single-file browser application that packages Atari ST `.PRG` / `.TOS` programs into 128 KB cartridge ROM images. It is a JavaScript port of the C tool [`atarist-USM`](https://github.com/sidecartridge/USM). See `CLAUDE.md` for architecture details and `README.md` for end-user usage.
 
 ---
 
@@ -44,6 +44,17 @@ npm run roundtrip -- path/to/file.prg   # LZSS round-trip helper (mirrors `usm -
 ```
 
 A direct `node build.mjs` is equivalent to `npm run build`. The script is deterministic — running it twice with no source changes produces an identical `index.html`.
+
+---
+
+## Deployment
+
+The site is published on GitHub Pages at <https://usm.sidecartridge.com/>.
+
+- **Source.** `main` branch, root folder. Pages serves the committed `index.html` directly — there is no deploy workflow. CI's `git diff --exit-code` already guarantees the committed `index.html` matches `src/`, so a fresh build at deploy time would be redundant.
+- **Custom domain.** `CNAME` at the repo root holds `usm.sidecartridge.com`. The GitHub UI mirrors this value; keep the two in sync (the file wins on the next deploy if they diverge).
+- **`.nojekyll`** at the repo root opts out of Jekyll processing. Pages does no transformation; the bytes on disk are the bytes served.
+- **No staging.** Every push to `main` ships live. There is no preview environment. Test locally with `npm run build && python3 -m http.server` before merging.
 
 ---
 

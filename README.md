@@ -1,9 +1,11 @@
 USM-web
 =======
 
-Browser port of [USM](https://github.com/sidecartridge/atarist-USM) by @ggnkua — a tool that packages Atari ST `.PRG` / `.TOS` programs into 128 KB cartridge ROM images, usable in emulators (Hatari, STEem) or burned to real cart hardware.
+Browser port of [USM](https://github.com/sidecartridge/USM) by @ggnkua — a tool that packages Atari ST `.PRG` / `.TOS` programs into 128 KB cartridge ROM images, usable in emulators (Hatari, STEem) or burned to real cart hardware.
 
-Open `index.html` in a modern browser. No install, no server.
+**Try it live: <https://usm.sidecartridge.com/>** — drag in a `.PRG` / `.TOS`, click Build, get a `.ROM` back.
+
+Or open `index.html` from this repo in a modern browser for offline use. No install, no server.
 
 The output is held to **byte-for-byte parity** with the upstream C tool for the same inputs.
 
