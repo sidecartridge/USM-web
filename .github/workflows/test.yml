@@ -1,0 +1,32 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Build index.html
+        run: npm run build
+
+      - name: Verify generated files are in sync with src/
+        run: |
+          if ! git diff --exit-code; then
+            echo ''
+            echo '::error::Generated files (index.html and/or src/prg-loader.js) are out of date. Run "npm run build" locally and commit the result.'
+            exit 1
+          fi
+
+      - run: npm test

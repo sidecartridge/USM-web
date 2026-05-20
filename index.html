@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>USM — Atari ST Cart Image Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500&display=swap" rel="stylesheet">
+<style>
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0b0f17;
+  color: #e5e7eb;
+  padding: 20px;
+}
+
+#app {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+#browserWarning {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto 16px;
+}
+
+.top-banner {
+  width: 100%;
+  max-width: 1080px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid rgba(15, 18, 28, 0.12);
+  border-radius: 16px;
+  background: rgba(245, 246, 250, 0.92);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(6px);
+  margin: 0 auto 16px;
+}
+
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #11131a;
+  text-decoration: none;
+}
+
+.brand-link img {
+  display: block;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+}
+
+.brand-wordmark {
+  height: 24px;
+  width: auto;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #1b2435;
+  text-decoration: none;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(27, 33, 48, 0.22);
+  background: rgba(229, 233, 244, 0.85);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.back-link:hover {
+  border-color: rgba(27, 33, 48, 0.42);
+  background: rgba(255, 255, 255, 0.95);
+  color: #0b0f18;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15, 18, 28, 0.18);
+}
+
+button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #f97316;
+  font-weight: 600;
+  color: #0b0f17;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+.steps {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  background: #0f172a;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.step-header span {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.step-content {
+  max-height: 0;
+  opacity: 0;
+  padding: 0 12px;
+  color: #cbd5f5;
+  transition: max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+}
+
+.step.active .step-content,
+.step.complete .step-content {
+  max-height: 1200px;
+  opacity: 1;
+  padding: 8px 12px 12px;
+}
+
+.step.complete .step-header {
+  color: #86efac;
+}
+
+pre {
+  background: #111827;
+  padding: 10px;
+  border-radius: 6px;
+  height: 220px;
+  overflow: auto;
+}
+
+progress {
+  width: 100%;
+  height: 18px;
+  appearance: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+progress::-webkit-progress-value {
+  background: #3b82f6;
+}
+
+progress::-moz-progress-bar {
+  background: #3b82f6;
+}
+
+.progress-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+/* Drop zone (Step 1). */
+.drop-zone {
+  border: 2px dashed #334155;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  background: #0b1220;
+  color: #cbd5f5;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.drop-zone.drag-active {
+  border-color: #f97316;
+  background: #1e293b;
+}
+
+.drop-zone .browse-link {
+  color: #fde047;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* File list (Step 1). */
+.file-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.file-list th, .file-list td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #1f2937;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.file-list th {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.file-list td.actions button {
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  background: #1f2937;
+  color: #f9fafb;
+  margin-right: 4px;
+}
+
+.file-list td.actions button.remove {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+.file-list td input[type="text"], .file-list td select {
+  background: #0b1220;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.file-list td.row-error {
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+/* Cart options form (Step 2). */
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.options-grid fieldset {
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 0;
+  background: #0b1220;
+}
+
+.options-grid fieldset legend {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  padding: 0 6px;
+}
+
+.options-grid label {
+  display: block;
+  margin: 4px 0;
+  color: #cbd5f5;
+  font-size: 0.9rem;
+}
+
+.options-grid input[type="text"], .options-grid select {
+  background: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+/* Error banner used by Step 2 validation. */
+.error-banner {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #7f1d1d;
+  color: #fecaca;
+  font-size: 0.9rem;
+}
+
+/* Generic muted hint text. */
+.hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+</style>
+<script>
+// Last-ditch surfacing of a top-level module-load failure (most likely:
+// the LZSS self-test threw). The bundle's <script type="module"> below
+// has no DOMContentLoaded handler to catch that, so we register here
+// before it runs.
+window.addEventListener('error', function (e) {
+  var w = document.getElementById('browserWarning');
+  if (w) {
+    w.style.display = 'block';
+    w.textContent = 'USM-web hit a startup error: ' + (e.message || 'unknown');
+  }
+});
+</script>
+</head>
+
+<body>
+
+<nav class="top-banner">
+  <a class="brand-link" href="https://sidecartridge.com" target="_blank" rel="noopener">
+    <img class="brand-mark" src="https://sidecartridge.com/assets/images/logo/logo.png" alt="SidecarTridge logo mark">
+    <img class="brand-wordmark" src="https://sidecartridge.com/assets/images/logo/logo-text.png" alt="SidecarTridge">
+  </a>
+  <a href="https://sidecartridge.com" id="backLink" class="back-link">&#8592; Back</a>
+</nav>
+
+<div id="browserWarning" style="display:none; padding:12px; background:#7f1d1d; border-radius:6px; margin-bottom:16px;">
+  Your browser doesn't support the File or Blob APIs that USM-web needs. Please use a recent version of Chrome, Firefox, or Safari.
+</div>
+
+<div id="app">
+  <h2>USM — Atari ST Cart Image Builder</h2>
+  <p style="margin-top:6px; color:#cbd5f5;">
+    Pack one or more Atari ST <code>.PRG</code> / <code>.TOS</code> programs into a 128&nbsp;KB cartridge ROM image.
+    Output works in Hatari, STEem, or on real cart hardware via the
+    <a href="https://sidecartridge.com/products/sidecartridge-multidevice-atari-st/" target="_blank" rel="noopener" style="color:#fde047;">SidecarTridge Multidevice</a>.
+  </p>
+
+  <ul class="steps" id="steps">
+
+    <li id="step1" class="step active">
+      <div class="step-header">Step 1/4 — Add programs <span class="step-status">Ready</span></div>
+      <div class="step-content">
+        <div id="dropZone" class="drop-zone">
+          Drag and drop one or more <code>.PRG</code> / <code>.TOS</code> files here, or
+          <label for="fileInput" class="browse-link">browse</label>.
+          <input type="file" id="fileInput" multiple accept=".prg,.tos,.PRG,.TOS,application/octet-stream" style="display:none">
+        </div>
+        <table id="fileList" class="file-list" style="display:none">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>File</th>
+              <th>Size</th>
+              <th>Compress (-z)</th>
+              <th>Init flag (-f)</th>
+              <th class="bss-col" style="display:none">BSS (-b)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="step1Hint" class="hint" style="margin-top:8px;">No programs yet.</div>
+      </div>
+    </li>
+
+    <li id="step2" class="step">
+      <div class="step-header">Step 2/4 — Cart options <span class="step-status">Pending</span></div>
+      <div class="step-content">
+        <div class="options-grid">
+          <fieldset>
+            <legend>Output format</legend>
+            <label><input type="radio" name="output" value="rom" checked> <code>.ROM</code> &mdash; standard cart</label>
+            <label><input type="radio" name="output" value="stc"> <code>.STC</code> &mdash; STEem prefix (-s)</label>
+            <label><input type="radio" name="output" value="diag"> Diagnostic cart (-d)</label>
+          </fieldset>
+          <fieldset>
+            <legend>Mode</legend>
+            <label><input type="radio" name="mode" value="default" checked> Default &mdash; stub loader</label>
+            <label><input type="radio" name="mode" value="classic"> Classic (-c) &mdash; in-ROM</label>
+          </fieldset>
+          <fieldset style="grid-column: 1 / -1;">
+            <legend>Defaults for newly added programs</legend>
+            <label>
+              <input type="checkbox" id="globalCompress"> Compress (-z) by default
+            </label>
+            <label>
+              Init flag (-f):
+              <select id="globalInitFlag">
+                <option value="">(none — manual launch from c: drive)</option>
+                <option value="0">0 — prior to display + IRQ init</option>
+                <option value="1">1 — just before GEMDOS init</option>
+                <option value="3">3 — prior to boot disk</option>
+                <option value="5">5 — Desk Accessory</option>
+                <option value="6">6 — non-GEM application</option>
+                <option value="7">7 — needs parameters</option>
+              </select>
+            </label>
+            <label class="classic-only" style="display:none;">
+              BSS address (-b, hex):
+              <input type="text" id="globalBssAddr" value="20000" pattern="[0-9A-Fa-f]+" size="10">
+              <span class="hint">(default 20000)</span>
+            </label>
+          </fieldset>
+        </div>
+        <div id="step2Errors" class="error-banner" style="display:none;"></div>
+      </div>
+    </li>
+
+    <li id="step3" class="step">
+      <div class="step-header">Step 3/4 — Build <span class="step-status">Pending</span></div>
+      <div class="step-content">
+        <p>Click <strong>Build cart</strong>. Per-program compression results stream into the log below.</p>
+        <button id="buildBtn" type="button" disabled>Build cart</button>
+      </div>
+    </li>
+
+    <li id="step4" class="step">
+      <div class="step-header">Step 4/4 — Download <span class="step-status">Pending</span></div>
+      <div class="step-content">
+        <label>File name: <input type="text" id="outputName" size="32"></label>
+        <a id="downloadLink" href="#" download="" style="display:none; margin-left:12px; padding:8px 14px; border-radius:6px; background:#fde047; color:#111827; font-weight:600; text-decoration:none;">Download</a>
+        <button id="resetBtn" type="button" style="margin-left:12px; background:#1f2937; color:#f9fafb;">Build another</button>
+      </div>
+    </li>
+
+  </ul>
+
+  <div id="fileName" style="margin:8px 0 6px; color:#cbd5f5;">Cart: (no build yet)</div>
+  <div class="progress-wrap">
+    <progress id="prog" value="0" max="100"></progress>
+    <div id="progLabel" class="progress-label">0%</div>
+  </div>
+
+  <div style="margin:10px 0 6px; color:#cbd5f5; display:flex; align-items:center; gap:8px;">
+    <button id="toggleLog" type="button" style="background:#1f2937; color:#f9fafb;">Hide process output</button>
+  </div>
+  <pre id="log"></pre>
+</div>
+
+<script type="module">
+// AUTOGENERATED by build.mjs — do not hand-edit index.html.
+// Source of truth: src/*.js + src/template.html + src/styles.css
+
+// ----- lzss.js -----
+// LZSS-12-4 codec — byte-faithful port of lzss_compress / lzss_decompress
+// from atarist-USM/usm.c. The encoder makes the same greedy match decisions
+// in the same order as the C reference, so its output is byte-identical.
+//
+// Bitstream: a sequence of <= 9-byte blocks. Each block is one flag byte
+// followed by up to 8 tokens. Flag bits are MSB-first:
+//   0 -> next 1 byte is a literal.
+//   1 -> next 2 bytes are a back-reference, big-endian, packed as
+//        ((offset - 1) << 4) | (length - 3). Offset 1..4096 (12 bits).
+//        Length 3..18 (4 bits).
+// No EOF marker — the decoder is driven by an explicit expected size
+// (the cart writer stores it as a 4-byte big-endian LONG before the
+// compressed payload).
+const LZSS_OFF_BITS = 12;
+const LZSS_LEN_BITS = 4;
+const LZSS_WIN_SIZE = 1 << LZSS_OFF_BITS;       // 4096
+const LZSS_MIN_MATCH = 3;
+const LZSS_MAX_MATCH = LZSS_MIN_MATCH + (1 << LZSS_LEN_BITS) - 1;  // 18
+
+// Encodes `src` (Uint8Array) and returns a new Uint8Array of exactly the
+// compressed length. Matches the greedy latest-first match scan in
+// usm.c:198-256: at each position we walk window candidates from closest
+// to furthest and keep the longest match (ties resolve to the closest
+// occurrence). Identical scan order is what makes the output byte-equal
+// to the C encoder.
+function lzssCompress(src) {
+  const srclen = src.length;
+  // Worst case: every input byte is a literal -> 9 output bytes per 8
+  // input bytes. The +64 covers any tail-block flag byte plus a small
+  // safety margin.
+  const dst = new Uint8Array(srclen + Math.ceil(srclen / 8) + 64);
+
+  let inp = 0;
+  let out = 0;
+  while (inp < srclen) {
+    const flagPos = out++;
+    let flag = 0;
+
+    for (let bit = 0; bit < 8 && inp < srclen; bit++) {
+      // Find the longest match in [windowStart, inp).
+      const windowStart = inp > LZSS_WIN_SIZE ? inp - LZSS_WIN_SIZE : 0;
+      let bestOff = 0;
+      let bestLen = 0;
+      let maxL = LZSS_MAX_MATCH;
+      if (inp + maxL > srclen) maxL = srclen - inp;
+
+      // Scan latest-first so a tie picks the closest occurrence.
+      for (let j = inp; j > windowStart; ) {
+        j--;
+        let l = 0;
+        while (l < maxL && src[j + l] === src[inp + l]) l++;
+        if (l > bestLen) {
+          bestLen = l;
+          bestOff = inp - j;
+          if (bestLen === LZSS_MAX_MATCH) break;
+        }
+      }
+
+      if (bestLen >= LZSS_MIN_MATCH) {
+        const encOff = bestOff - 1;
+        const encLen = bestLen - LZSS_MIN_MATCH;
+        const word = (encOff << LZSS_LEN_BITS) | encLen;
+        dst[out++] = (word >>> 8) & 0xff;
+        dst[out++] = word & 0xff;
+        flag |= 1 << (7 - bit);
+        inp += bestLen;
+      } else {
+        dst[out++] = src[inp++];
+      }
+    }
+
+    dst[flagPos] = flag;
+  }
+
+  return dst.slice(0, out);
+}
+
+// Decodes `src` into a Uint8Array of exactly `expectedSize` bytes. The C
+// reference returns -1 on any malformed input; we throw an Error so the
+// caller (UI log pane) can surface a clear message. The cart writer stores
+// the expected size as a 4-byte big-endian LONG before each compressed
+// payload, so this is always known at decode time.
+function lzssDecompress(src, expectedSize) {
+  const srclen = src.length;
+  const dst = new Uint8Array(expectedSize);
+
+  let inp = 0;
+  let out = 0;
+  while (out < expectedSize) {
+    if (inp >= srclen) throw new Error('lzssDecompress: source exhausted');
+    const flag = src[inp++];
+
+    for (let bit = 0; bit < 8 && out < expectedSize; bit++) {
+      if (flag & (1 << (7 - bit))) {
+        if (inp + 2 > srclen) throw new Error('lzssDecompress: truncated back-reference');
+        const word = (src[inp] << 8) | src[inp + 1];
+        inp += 2;
+        const off = (word >>> LZSS_LEN_BITS) + 1;
+        const len = (word & ((1 << LZSS_LEN_BITS) - 1)) + LZSS_MIN_MATCH;
+        if (off > out) throw new Error('lzssDecompress: back-reference before start of output');
+        if (out + len > expectedSize) throw new Error('lzssDecompress: back-reference overruns expected size');
+        // Byte-by-byte copy: source and destination ranges can overlap
+        // (this is how LZSS encodes RLE-like runs).
+        for (let k = 0; k < len; k++) {
+          dst[out] = dst[out - off];
+          out++;
+        }
+      } else {
+        if (inp >= srclen) throw new Error('lzssDecompress: source exhausted at literal');
+        dst[out++] = src[inp++];
+      }
+    }
+  }
+  return dst;
+}
+
+// Hand-rolled fixed buffer that exercises both literal and back-reference
+// code paths. Mirrors the buffer in lzss_selftest() in atarist-USM/usm.c.
+const SELFTEST_BUFFER = (() => {
+  const s =
+    'Hello, World! Hello, World! Hello, World!' +
+    '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09' +
+    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+})();
+
+// Quick startup self-test. Runs once on module load (below) and is also
+// exported so tests can call it explicitly. Throws on any failure so the
+// module's top-level import in src/ui.js fails noisily — same behavior
+// as the C tool which exits early at usm.c:363.
+function lzssSelftest() {
+  const comp = lzssCompress(SELFTEST_BUFFER);
+  const deco = lzssDecompress(comp, SELFTEST_BUFFER.length);
+  if (deco.length !== SELFTEST_BUFFER.length) {
+    throw new Error(`lzssSelftest: decoded length ${deco.length} != ${SELFTEST_BUFFER.length}`);
+  }
+  for (let i = 0; i < deco.length; i++) {
+    if (deco[i] !== SELFTEST_BUFFER[i]) {
+      throw new Error(`lzssSelftest: mismatch at offset ${i}: got 0x${deco[i].toString(16)}, expected 0x${SELFTEST_BUFFER[i].toString(16)}`);
+    }
+  }
+}
+
+// Run the self-test eagerly. If the encoder/decoder pair is broken,
+// every consumer of this module sees the failure at import time.
+lzssSelftest();
+
+// Mirrors the hidden `usm -T <file>` debug command in usm.c:325-350:
+// compress, decompress, byte-compare. Throws on round-trip mismatch
+// (which would mean a real bug); on success, returns the compressed
+// bytes and the ratio so the caller can format the same line the C
+// tool prints.
+function lzssRoundtrip(input) {
+  const compressed = lzssCompress(input);
+  const decoded = lzssDecompress(compressed, input.length);
+  for (let i = 0; i < input.length; i++) {
+    if (decoded[i] !== input[i]) {
+      throw new Error(`lzssRoundtrip: mismatch at offset ${i}`);
+    }
+  }
+  const ratio = input.length === 0 ? 0 : (compressed.length / input.length) * 100;
+  return { compressed, ratio };
+}
+
+// ----- prg-loader.js -----
+// AUTOGENERATED by build.mjs from src/stubs/*.bin — do not hand-edit.
+// To update: replace the .bin files (frozen snapshots from upstream
+// atarist-USM), run `npm run build`, commit the regenerated file.
+const PRG_LOADER = new Uint8Array([
+  0x28, 0x6F, 0x00, 0x04, 0x2F, 0x3C, 0x00, 0x00, 0x01, 0x00, 0x2F, 0x0C, 0x42, 0x67, 0x3F, 0x3C,
+  0x00, 0x4A, 0x4E, 0x41, 0x4F, 0xEF, 0x00, 0x0C, 0x70, 0xFF, 0x2F, 0x00, 0x3F, 0x3C, 0x00, 0x48,
+  0x4E, 0x41, 0x5C, 0x8F, 0x22, 0x00, 0x2F, 0x00, 0x3F, 0x3C, 0x00, 0x48, 0x4E, 0x41, 0x5C, 0x8F,
+  0x28, 0x40, 0x34, 0x3C, 0x00, 0x3F, 0x42, 0x9C, 0x51, 0xCA, 0xFF, 0xFC, 0x2A, 0x40, 0x2A, 0x80,
+  0x2E, 0x40, 0xDF, 0xC1, 0x2B, 0x4F, 0x00, 0x04, 0x51, 0x8F, 0x2F, 0x4D, 0x00, 0x04, 0x49, 0xED,
+  0x00, 0x80, 0x2B, 0x4C, 0x00, 0x20, 0x49, 0xED, 0x00, 0x30, 0x2B, 0x4C, 0x00, 0x2C, 0x49, 0xFA,
+  0x00, 0x8C, 0x41, 0xEC, 0x00, 0x1C, 0x43, 0xED, 0x01, 0x00, 0x20, 0x2C, 0x00, 0x02, 0xD0, 0xAC,
+  0x00, 0x06, 0xD0, 0xAC, 0x00, 0x0E, 0xE2, 0x88, 0x53, 0x80, 0x32, 0xD8, 0x51, 0xC8, 0xFF, 0xFC,
+  0x08, 0x2C, 0x00, 0x00, 0x00, 0x19, 0x66, 0x0E, 0x20, 0x2C, 0x00, 0x0A, 0xD0, 0x89, 0x32, 0xFC,
+  0x00, 0x00, 0xB0, 0x89, 0x6E, 0xF8, 0x4A, 0x90, 0x67, 0x22, 0x43, 0xED, 0x01, 0x00, 0x22, 0x09,
+  0x70, 0x00, 0xD3, 0xD8, 0xD3, 0x91, 0x10, 0x18, 0x67, 0x12, 0xB0, 0x3C, 0x00, 0x01, 0x66, 0x06,
+  0x43, 0xE9, 0x00, 0xFE, 0x60, 0xF0, 0xD2, 0xC0, 0xD3, 0x91, 0x60, 0xEA, 0x43, 0xED, 0x01, 0x00,
+  0x22, 0x09, 0x2B, 0x41, 0x00, 0x08, 0x20, 0x2C, 0x00, 0x02, 0x2B, 0x40, 0x00, 0x0C, 0xD2, 0x80,
+  0x2B, 0x41, 0x00, 0x10, 0x20, 0x2C, 0x00, 0x06, 0x2B, 0x40, 0x00, 0x14, 0xD2, 0x80, 0x2B, 0x41,
+  0x00, 0x18, 0x2B, 0x6C, 0x00, 0x0A, 0x00, 0x1C, 0x91, 0xC8, 0x4E, 0xD1
+]);
+const PRG_LOADER_COMPRESSED = new Uint8Array([
+  0x28, 0x6F, 0x00, 0x04, 0x2F, 0x3C, 0x00, 0x00, 0x01, 0x00, 0x2F, 0x0C, 0x42, 0x67, 0x3F, 0x3C,
+  0x00, 0x4A, 0x4E, 0x41, 0x4F, 0xEF, 0x00, 0x0C, 0x70, 0xFF, 0x2F, 0x00, 0x3F, 0x3C, 0x00, 0x48,
+  0x4E, 0x41, 0x5C, 0x8F, 0x22, 0x00, 0x2F, 0x00, 0x3F, 0x3C, 0x00, 0x48, 0x4E, 0x41, 0x5C, 0x8F,
+  0x28, 0x40, 0x34, 0x3C, 0x00, 0x3F, 0x42, 0x9C, 0x51, 0xCA, 0xFF, 0xFC, 0x2A, 0x40, 0x2A, 0x80,
+  0x2E, 0x40, 0xDF, 0xC1, 0x2B, 0x4F, 0x00, 0x04, 0x51, 0x8F, 0x2F, 0x4D, 0x00, 0x04, 0x49, 0xED,
+  0x00, 0x80, 0x2B, 0x4C, 0x00, 0x20, 0x49, 0xED, 0x00, 0x30, 0x2B, 0x4C, 0x00, 0x2C, 0x49, 0xFA,
+  0x00, 0xD0, 0x20, 0x1C, 0x20, 0x4C, 0x43, 0xED, 0x01, 0x00, 0x47, 0xF1, 0x08, 0x00, 0xB3, 0xCB,
+  0x6C, 0x3A, 0x14, 0x18, 0x76, 0x07, 0xB3, 0xCB, 0x6C, 0x32, 0xD4, 0x02, 0x65, 0x08, 0x12, 0xD8,
+  0x51, 0xCB, 0xFF, 0xF4, 0x60, 0xEC, 0x78, 0x00, 0x18, 0x18, 0xE1, 0x4C, 0x18, 0x18, 0x3A, 0x04,
+  0xE8, 0x4C, 0x52, 0x44, 0x02, 0x45, 0x00, 0x0F, 0x56, 0x45, 0x24, 0x49, 0x94, 0xC4, 0x53, 0x45,
+  0x12, 0xDA, 0x51, 0xCD, 0xFF, 0xFC, 0x51, 0xCB, 0xFF, 0xCE, 0x60, 0xC6, 0x49, 0xED, 0x01, 0x00,
+  0x20, 0x4C, 0x41, 0xE8, 0x00, 0x1C, 0xD1, 0xEC, 0x00, 0x02, 0xD1, 0xEC, 0x00, 0x06, 0xD1, 0xEC,
+  0x00, 0x0E, 0x22, 0x48, 0x08, 0x2C, 0x00, 0x00, 0x00, 0x19, 0x66, 0x0E, 0x20, 0x2C, 0x00, 0x0A,
+  0xD0, 0x89, 0x32, 0xFC, 0x00, 0x00, 0xB0, 0x89, 0x6E, 0xF8, 0x4A, 0x90, 0x67, 0x22, 0x43, 0xED,
+  0x01, 0x1C, 0x22, 0x09, 0x70, 0x00, 0xD3, 0xD8, 0xD3, 0x91, 0x10, 0x18, 0x67, 0x12, 0xB0, 0x3C,
+  0x00, 0x01, 0x66, 0x06, 0x43, 0xE9, 0x00, 0xFE, 0x60, 0xF0, 0xD2, 0xC0, 0xD3, 0x91, 0x60, 0xEA,
+  0x43, 0xED, 0x01, 0x1C, 0x22, 0x09, 0x2B, 0x41, 0x00, 0x08, 0x20, 0x2C, 0x00, 0x02, 0x2B, 0x40,
+  0x00, 0x0C, 0xD2, 0x80, 0x2B, 0x41, 0x00, 0x10, 0x20, 0x2C, 0x00, 0x06, 0x2B, 0x40, 0x00, 0x14,
+  0xD2, 0x80, 0x2B, 0x41, 0x00, 0x18, 0x2B, 0x6C, 0x00, 0x0A, 0x00, 0x1C, 0x91, 0xC8, 0x4E, 0xD1
+]);
+
+// ----- prg.js -----
+// PRG header parsing — matches the PRG_HEADER struct in
+// atarist-USM/usm.c:49-59. The header is 28 bytes, big-endian
+// throughout, prefixing TEXT, DATA, BSS, symbol-table, and relocation
+// sections in a standard Atari ST executable.
+const PRG_HEADER_SIZE = 28;
+const PRG_MAGIC = 0x601A;
+
+// 128 KB upper bound, same as the cart buffer ceiling in usm.c. Anything
+// larger can't physically fit in a cart even if its only entry, so we
+// reject at the parser layer to fail fast.
+const PRG_MAX_FILE_SIZE = 128 * 1024;
+function parsePrgHeader(buf) {
+  if (!(buf instanceof Uint8Array)) {
+    throw new Error('parsePrgHeader: expected a Uint8Array');
+  }
+  if (buf.length < PRG_HEADER_SIZE) {
+    throw new Error(`parsePrgHeader: file is ${buf.length} bytes, need at least ${PRG_HEADER_SIZE}`);
+  }
+  if (buf.length > PRG_MAX_FILE_SIZE) {
+    throw new Error(`parsePrgHeader: file is ${buf.length} bytes, exceeds the 128 KB cart limit`);
+  }
+  const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  const magic = view.getUint16(0, /*littleEndian*/ false);
+  if (magic !== PRG_MAGIC) {
+    throw new Error(`parsePrgHeader: bad magic 0x${magic.toString(16).padStart(4, '0')}, expected 0x601A`);
+  }
+  return {
+    magic,
+    tsize:    view.getUint32(2,  false),
+    dsize:    view.getUint32(6,  false),
+    bsize:    view.getUint32(10, false),
+    ssize:    view.getUint32(14, false),
+    res1:     view.getUint32(18, false),
+    prgflags: view.getUint32(22, false),
+    absflag:  view.getUint16(26, false),
+  };
+}
+
+// Walk the PRG relocation byte-stream and yield each fixup offset, all
+// expressed relative to the start of TEXT+DATA. Matches the loop at
+// atarist-USM/usm.c:766-812.
+//
+// PRG reloc format:
+//   - 4 bytes: first offset (big-endian LONG). If 0, the PRG has no
+//     fixups (the spec's alt encoding); the walker yields nothing.
+//   - Otherwise the cursor advances by that LONG; emit a fixup at the
+//     new position.
+//   - Then a stream of bytes:
+//       0x01           -> advance cursor by 254 (no fixup emitted)
+//       0x00           -> terminator
+//       any other byte -> advance cursor by that value, emit a fixup at
+//                         the new position
+//
+// `prgHeader` is the parsed header (so we know tsize+dsize for the
+// fixup-site bounds). The reloc table starts at
+// `PRG_HEADER_SIZE + tsize + dsize + ssize`.
+//
+// `onFixup(offsetInTextData)` is called for each fixup. Throws if the
+// reloc table is truncated, missing its 4-byte first-LONG, missing its
+// terminator, or if a fixup would land past program_size - 4.
+function walkRelocations(prgBuf, prgHeader, onFixup) {
+  if (!(prgBuf instanceof Uint8Array)) {
+    throw new Error('walkRelocations: expected a Uint8Array');
+  }
+  const programSize = prgHeader.tsize + prgHeader.dsize;
+  const relocStart = PRG_HEADER_SIZE + prgHeader.tsize + prgHeader.dsize + prgHeader.ssize;
+  const relocEnd = prgBuf.length;
+
+  if (relocStart + 4 > relocEnd) {
+    throw new Error('walkRelocations: relocation table extends past end of file');
+  }
+
+  const view = new DataView(prgBuf.buffer, prgBuf.byteOffset, prgBuf.byteLength);
+  let first = view.getUint32(relocStart, /*littleEndian*/ false);
+  if (first === 0) return; // no fixups
+
+  let cursor = first; // offset into TEXT+DATA where the first fixup lives
+  if (cursor + 4 > programSize) {
+    throw new Error(`walkRelocations: first fixup at offset ${cursor} would extend past TEXT+DATA (${programSize})`);
+  }
+  onFixup(cursor);
+
+  let relocPos = relocStart + 4;
+  while (true) {
+    if (relocPos >= relocEnd) {
+      throw new Error('walkRelocations: relocation table missing terminator');
+    }
+    const b = prgBuf[relocPos++];
+    if (b === 0) return; // terminator
+    if (b === 1) {
+      cursor += 254;
+      continue;
+    }
+    cursor += b;
+    if (cursor + 4 > programSize) {
+      throw new Error(`walkRelocations: fixup at offset ${cursor} would extend past TEXT+DATA (${programSize})`);
+    }
+    onFixup(cursor);
+  }
+}
+
+// ----- gemdos.js -----
+// GEMDOS time/date and 8.3 filename helpers — match
+// atarist-USM/usm.c:152-178 and the inline filename loop at usm.c:716-744.
+
+// GEMDOS time word: (hours << 11) | (minutes << 5) | (seconds / 2).
+// GEMDOS date word: ((year - 1980) << 9) | (month << 5) | day.
+//
+// The C reference reads the file mtime via localtime(), so the resulting
+// CA_TIME/CA_DATE depend on the host timezone. Goldens are generated
+// with TZ=UTC so byte-parity tests are reproducible; for stability in
+// JS we always read UTC fields from the Date argument. Production
+// (browser) gets UTC timestamps regardless of the user's locale — a
+// deliberate divergence from the C tool's localtime() behavior, in
+// exchange for byte-stable output across hosts.
+//
+// Years outside [1980, 2107] are clamped (the C reference does the same
+// at usm.c:173-174). When `date` is null/undefined or non-Date the
+// caller gets the 1980-01-01 00:00:00 zero point — also matches the
+// C fallback when stat() fails.
+function gemdosTimeDate(date) {
+  let year, month, day, hour, minute, second;
+  if (date instanceof Date && !Number.isNaN(date.valueOf())) {
+    year   = date.getUTCFullYear();
+    month  = date.getUTCMonth() + 1;
+    day    = date.getUTCDate();
+    hour   = date.getUTCHours();
+    minute = date.getUTCMinutes();
+    second = date.getUTCSeconds();
+  } else {
+    year = 1980; month = 1; day = 1; hour = 0; minute = 0; second = 0;
+  }
+
+  if (year < 1980) { year = 1980; month = 1; day = 1; hour = 0; minute = 0; second = 0; }
+  if (year > 2107) { year = 2107; }
+
+  const time = ((hour << 11) | (minute << 5) | (second >> 1)) & 0xffff;
+  const dateWord = (((year - 1980) << 9) | (month << 5) | day) & 0xffff;
+  return { time, date: dateWord };
+}
+
+// Convert any input path to the 14-byte CA_FILENAME slot's contents:
+// uppercase, 8.3, NUL-padded. Matches the loop at usm.c:716-744.
+// Returns a 14-byte Uint8Array. Behavior on edge cases:
+//   - "/path/to/foo.prg" -> directory prefix stripped to "FOO.PRG".
+//   - "LONGFILENAME.TOS" -> base truncated to 8 chars: "LONGFILE.TOS".
+//   - "a.b.c"            -> base "A", then ".B.C" copied verbatim.
+//   - "noext"            -> base "NOEXT" only; no dot, no extension.
+//   - "FOO."             -> base "FOO" then "." (the C loop copies the
+//                            dot even with no characters after it).
+function toEightThreeName(filename) {
+  if (typeof filename !== 'string') {
+    throw new Error('toEightThreeName: expected a string');
+  }
+
+  // Strip directory prefix (both '/' and '\\', matching usm.c:554-560).
+  let s = filename;
+  let lastSlash = -1;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '/' || s[i] === '\\') lastSlash = i;
+  }
+  if (lastSlash >= 0) s = s.slice(lastSlash + 1);
+
+  const out = new Uint8Array(14);  // pre-zeroed
+  let dst = 0;
+  let src = 0;
+
+  // Copy up to 8 chars of the base, uppercase, stopping at '.' or EOS.
+  for (let i = 0; i < 8; i++) {
+    const c = s.charCodeAt(src);
+    if (Number.isNaN(c) || c === 0x2E /* '.' */) break;
+    out[dst++] = asciiUpper(c);
+    src++;
+  }
+
+  // Skip any extra base characters that didn't fit (truncation).
+  while (src < s.length && s.charCodeAt(src) !== 0x2E) src++;
+
+  // Copy the dot + up to 3 extension chars, uppercase. The C loop runs
+  // i<4 which is "1 dot + 3 chars".
+  for (let i = 0; i < 4; i++) {
+    if (src >= s.length) break;
+    out[dst++] = asciiUpper(s.charCodeAt(src));
+    src++;
+  }
+
+  return out;
+}
+
+function asciiUpper(code) {
+  if (code >= 0x61 && code <= 0x7A) return code - 0x20;
+  return code;
+}
+
+// ----- cart-writer.js -----
+// Cart-writer primitives. All multi-byte cart fields are 68k big-endian;
+// these wrappers exist so there's one grep target ("writeBE") for every
+// such write and so the intent matches BYTESWAP_LONG / BYTESWAP_WORD in
+// atarist-USM/usm.c.
+function writeBE32(view, offset, value) {
+  view.setUint32(offset, value >>> 0, /*littleEndian*/ false);
+}
+function writeBE16(view, offset, value) {
+  view.setUint16(offset, value & 0xffff, /*littleEndian*/ false);
+}
+
+// CA_HEADER record layout (34 bytes) — matches the struct at
+// atarist-USM/usm.c:29-47.
+const CA_HEADER_SIZE = 34;
+
+// Cart ROM is mapped at 0xFA0000 on the Atari ST. Addresses that go into
+// CA_NEXT / CA_RUN / CA_INIT are (this base) + offset-in-cart.
+const CART_ROM_BASE = 0xFA0000;
+
+// Encode the -f init flag (0 / 1 / 3 / 5 / 6 / 7) into the bit set in
+// the top byte of CA_INIT. Mirrors usm.c:144 `1 << (24 + (*p - '0'))`.
+// Throws on unsupported flag values rather than silently producing junk.
+function encodeInitFlag(flag) {
+  if (![0, 1, 3, 5, 6, 7].includes(flag)) {
+    throw new Error(`encodeInitFlag: -f expects 0, 1, 3, 5, 6, or 7 (got ${flag})`);
+  }
+  return (1 << (24 + flag)) >>> 0;
+}
+
+// Write a CA_HEADER record into `view` at `offset`. All multi-byte
+// fields are big-endian. `filename` must be a 14-byte Uint8Array already
+// uppercased + NUL-padded by toEightThreeName.
+//
+// Field address arithmetic lives at the call site (see Story 7): this
+// helper is byte-layout only so the cart writer's tests can pin every
+// field independently.
+function writeCaHeader(view, offset, fields) {
+  const { next, init, run, time, date, size, filename } = fields;
+  if (!(filename instanceof Uint8Array) || filename.length !== 14) {
+    throw new Error('writeCaHeader: filename must be a 14-byte Uint8Array');
+  }
+  writeBE32(view, offset + 0,  next);
+  writeBE32(view, offset + 4,  init);
+  writeBE32(view, offset + 8,  run);
+  writeBE16(view, offset + 12, time);
+  writeBE16(view, offset + 14, date);
+  writeBE32(view, offset + 16, size);
+  const dst = new Uint8Array(view.buffer, view.byteOffset + offset + 20, 14);
+  dst.set(filename);
+}
+
+// Default-mode entry layout (per atarist-USM/usm.c:836-849):
+//   [ CA_HEADER (34 B) ][ prg_loader stub (236 B) ][ verbatim PRG bytes ]
+// Returns the number of bytes written (== CA_HEADER + stub + prg.length).
+// Caller must word-align after the call if the total is odd (`usm.c:854-857`).
+//
+// `nextEntryAddr` is the absolute ROM address the CA_NEXT field should
+// point at. The C tool resolves it as
+// `CART_ROM_BASE + offset + entry_total_size_padded` before writing the
+// header; for the last entry, the caller patches CA_NEXT to 0 after the
+// whole chain has been laid out.
+//
+// `initFlagDigit` is the -fY digit (0/1/3/5/6/7) or null/undefined for
+// "no auto-run flag set" — the C tool's distinction between
+// "global_init_flag = 0" (no -f anywhere) and "-f0".
+function writeDefaultEntry(view, offset, prgBytes, opts) {
+  const { name, initFlagDigit, mtime, nextEntryAddr } = opts;
+  if (!(prgBytes instanceof Uint8Array)) {
+    throw new Error('writeDefaultEntry: prgBytes must be a Uint8Array');
+  }
+  const payload_in_cart = PRG_LOADER.length + prgBytes.length;
+  const entryAddr = CART_ROM_BASE + offset;
+  const stubAddr = entryAddr + CA_HEADER_SIZE;
+  const filename = toEightThreeName(name);
+  const { time, date } = gemdosTimeDate(mtime);
+  const init = initFlagDigit == null
+    ? 0
+    : ((encodeInitFlag(initFlagDigit) + stubAddr) >>> 0);
+
+  writeCaHeader(view, offset, {
+    next: nextEntryAddr >>> 0,
+    init,
+    run: stubAddr >>> 0,
+    time,
+    date,
+    size: payload_in_cart,
+    filename,
+  });
+
+  const dst = new Uint8Array(view.buffer, view.byteOffset + offset + CA_HEADER_SIZE, payload_in_cart);
+  dst.set(PRG_LOADER, 0);
+  dst.set(prgBytes, PRG_LOADER.length);
+
+  return CA_HEADER_SIZE + payload_in_cart;
+}
+const CART_SIZE = 128 * 1024;
+const CART_MAGIC = 0xABCDEF42;
+const CART_MAGIC_DIAGNOSTIC = 0xfa52235f;
+const STEEM_PREFIX_SIZE = 4;
+class CartOverflowError extends Error {
+  constructor(name, footprint, remaining) {
+    super(`File ${name} will not fit in image (entry footprint ${footprint} bytes, ${remaining} bytes remaining)`);
+    this.name = 'CartOverflowError';
+    this.entryFootprint = footprint;
+    this.remaining = remaining;
+  }
+}
+
+// Run LZSS-12-4 on prgBytes and decide whether the compressed entry is
+// actually smaller than the uncompressed one. Matches the auto-fallback
+// rule in usm.c:638 — compressed_entry < uncompressed_entry counts the
+// difference between the 236-byte and 304-byte stubs, so tiny inputs
+// usually fail the test even when the raw data shrinks.
+//
+// Returns:
+//   { kind: 'compressed', compressed, dataRatio }  -> caller should
+//      writeCompressedEntry, log "compressed N -> M (RATIO%)".
+//   { kind: 'fallback', entryRatio }               -> caller should
+//      writeDefaultEntry, log "no savings (RATIO% entry), shipping
+//      uncompressed".
+function tryCompress(prgBytes) {
+  const compressed = lzssCompress(prgBytes);
+  const uncompFootprint = PRG_LOADER.length + prgBytes.length;
+  const compFootprint = PRG_LOADER_COMPRESSED.length + 4 + compressed.length;
+  if (compFootprint < uncompFootprint) {
+    const dataRatio = (compressed.length / prgBytes.length) * 100;
+    return { kind: 'compressed', compressed, dataRatio };
+  }
+  const entryRatio = (compFootprint / uncompFootprint) * 100;
+  return { kind: 'fallback', entryRatio };
+}
+
+// Compressed-mode entry layout (per usm.c:817-833):
+//   [ CA_HEADER (34 B) ][ prg_loader_compressed (304 B) ]
+//   [ uncompressed_size LONG, big-endian (4 B) ][ compressed payload ]
+// Caller is responsible for choosing this path only when tryCompress
+// returned kind === 'compressed'. Same word-alignment rule applies
+// after the call.
+function writeCompressedEntry(view, offset, prgBytes, compressed, opts) {
+  const { name, initFlagDigit, mtime, nextEntryAddr } = opts;
+  if (!(prgBytes instanceof Uint8Array) || !(compressed instanceof Uint8Array)) {
+    throw new Error('writeCompressedEntry: prgBytes and compressed must be Uint8Arrays');
+  }
+  const payload_in_cart = PRG_LOADER_COMPRESSED.length + 4 + compressed.length;
+  const entryAddr = CART_ROM_BASE + offset;
+  const stubAddr = entryAddr + CA_HEADER_SIZE;
+  const filename = toEightThreeName(name);
+  const { time, date } = gemdosTimeDate(mtime);
+  const init = initFlagDigit == null
+    ? 0
+    : ((encodeInitFlag(initFlagDigit) + stubAddr) >>> 0);
+
+  writeCaHeader(view, offset, {
+    next: nextEntryAddr >>> 0,
+    init,
+    run: stubAddr >>> 0,
+    time,
+    date,
+    size: payload_in_cart,
+    filename,
+  });
+
+  // Stub + uncompressed-size LONG (big-endian) + compressed payload.
+  let cursor = offset + CA_HEADER_SIZE;
+  const stub = new Uint8Array(view.buffer, view.byteOffset + cursor, PRG_LOADER_COMPRESSED.length);
+  stub.set(PRG_LOADER_COMPRESSED);
+  cursor += PRG_LOADER_COMPRESSED.length;
+  writeBE32(view, cursor, prgBytes.length);
+  cursor += 4;
+  const payload = new Uint8Array(view.buffer, view.byteOffset + cursor, compressed.length);
+  payload.set(compressed);
+
+  return CA_HEADER_SIZE + payload_in_cart;
+}
+
+// Classic-mode entry layout (per usm.c:750-815):
+//   [ CA_HEADER (34 B, omitted when diagnostic) ][ relocated TEXT+DATA ]
+// No stub, no PRG header. program_size = (tsize+dsize+1) & ~1 — the
+// extra byte (when the file is odd-sized) comes from the byte after
+// TEXT+DATA in the original PRG, matching usm.c:623.
+//
+// `prgHeader` is the parsed PRG header; `prgBuf` is the raw file bytes
+// (the relocator needs both to walk the reloc table).
+//
+// Returns the number of bytes written from `offset` (== CA_HEADER_SIZE
+// + program_size unless diagnostic, in which case program_size only).
+function writeClassicEntry(view, offset, prgBuf, prgHeader, opts) {
+  const { name, initFlagDigit, mtime, nextEntryAddr, bssAddr, diagnostic } = opts;
+  if (!(prgBuf instanceof Uint8Array)) {
+    throw new Error('writeClassicEntry: prgBuf must be a Uint8Array');
+  }
+
+  const program_size = (prgHeader.tsize + prgHeader.dsize + 1) & ~1;
+
+  let programOffsetInCart;
+  let bytesWritten;
+  if (diagnostic) {
+    // Diagnostic carts skip the CA_HEADER entirely — the OS jumps
+    // straight to programOffsetInCart after reset.
+    programOffsetInCart = offset;
+    bytesWritten = program_size;
+  } else {
+    programOffsetInCart = offset + CA_HEADER_SIZE;
+    bytesWritten = CA_HEADER_SIZE + program_size;
+    const entryAddr = CART_ROM_BASE + offset;
+    const programAddr = CART_ROM_BASE + programOffsetInCart;
+    const filename = toEightThreeName(name);
+    const { time, date } = gemdosTimeDate(mtime);
+    const init = initFlagDigit == null
+      ? 0
+      : ((encodeInitFlag(initFlagDigit) + programAddr) >>> 0);
+    writeCaHeader(view, offset, {
+      next: nextEntryAddr >>> 0,
+      init,
+      run: programAddr >>> 0,
+      time,
+      date,
+      size: program_size,
+      filename,
+    });
+  }
+
+  // Copy TEXT+DATA verbatim from the PRG file.
+  const programDst = new Uint8Array(view.buffer, view.byteOffset + programOffsetInCart, program_size);
+  programDst.set(prgBuf.subarray(PRG_HEADER_SIZE, PRG_HEADER_SIZE + program_size));
+
+  // Apply in-place relocations against the cart-resident copy.
+  relocateTextData(view, programOffsetInCart, prgBuf, prgHeader, bssAddr);
+
+  return bytesWritten;
+}
+
+// Build a complete cart image from a list of programs. v1 scope: default
+// mode + -z (compressed) + multi-program + -s (STEem prefix) + -fY
+// (init flag, per-program). Classic (-c) and diagnostic (-d) throw
+// until Epic 004 lands.
+//
+// `programs` is an array of resolved per-program options:
+//   { name, bytes, compress, initFlagDigit, mtime }
+// The UI (Epic 005) resolves global -> per-file flag inheritance before
+// calling this.
+//
+// `onLogLine` (optional) receives structured events for the log pane:
+//   { type: 'compressed', name, origSize, compSize, dataRatio }
+//   { type: 'fallback',   name, entryRatio }
+//
+// Returns a Uint8Array: 128 KB normally, or 128 KB + 4 with steem=true.
+const DEFAULT_BSS_ADDR = 0x20000;
+function buildCart({
+  programs,
+  steem = false,
+  diagnostic = false,
+  classic = false,
+  globalBssAddr = DEFAULT_BSS_ADDR,
+  onLogLine,
+}) {
+  if (!Array.isArray(programs) || programs.length === 0) {
+    throw new Error('buildCart: programs must be a non-empty array');
+  }
+  // Conflict rules. Order matches usm.c: global -z+-c and -z+-d checks
+  // run first (usm.c:458-467), then the per-program -d-requires-c check
+  // (usm.c:613-621). Diagnostic-implies-single-program is enforced when
+  // we get to actual entry layout (usm.c:861-868).
+  for (const p of programs) {
+    if (p.compress && classic) {
+      throw new Error(`buildCart: -z and -c are incompatible (program "${p.name}")`);
+    }
+    if (p.compress && diagnostic) {
+      throw new Error(`buildCart: -z and -d are incompatible (program "${p.name}")`);
+    }
+  }
+  if (diagnostic && !classic) {
+    throw new Error('buildCart: -d (diagnostic) requires -c (classic mode)');
+  }
+  if (diagnostic && programs.length !== 1) {
+    throw new Error('buildCart: diagnostic carts must contain exactly one program');
+  }
+
+  const cart = new Uint8Array(CART_SIZE);
+  fillUsmPattern(cart);
+  const view = new DataView(cart.buffer);
+
+  // Cart magic at offset 0.
+  writeBE32(view, 0, diagnostic ? CART_MAGIC_DIAGNOSTIC : CART_MAGIC);
+  let offset = 4;
+
+  // Pre-compute each entry's payload + padded footprint so we can resolve
+  // CA_NEXT at write time. Compression runs here, too — caller-visible
+  // log events are emitted in this loop so the UI streams them in the
+  // same order as the C tool's stdout.
+  const entryPlans = programs.map((p) => {
+    if (!(p.bytes instanceof Uint8Array)) {
+      throw new Error(`buildCart: program "${p.name}" bytes must be a Uint8Array`);
+    }
+    if (classic) {
+      const header = parsePrgHeader(p.bytes);
+      const programSize = (header.tsize + header.dsize + 1) & ~1;
+      const entrySize = diagnostic ? programSize : CA_HEADER_SIZE + programSize;
+      const paddedSize = (entrySize + 1) & ~1;
+      return { ...p, header, kind: 'classic', entrySize, paddedSize };
+    }
+    // Non-classic: default or compressed.
+    let kind = 'default';
+    let compressed = null;
+    let payloadSize = PRG_LOADER.length + p.bytes.length;
+    if (p.compress) {
+      const result = tryCompress(p.bytes);
+      if (result.kind === 'compressed') {
+        kind = 'compressed';
+        compressed = result.compressed;
+        payloadSize = PRG_LOADER_COMPRESSED.length + 4 + compressed.length;
+        onLogLine?.({
+          type: 'compressed',
+          name: p.name,
+          origSize: p.bytes.length,
+          compSize: compressed.length,
+          dataRatio: result.dataRatio,
+        });
+      } else {
+        onLogLine?.({
+          type: 'fallback',
+          name: p.name,
+          entryRatio: result.entryRatio,
+        });
+      }
+    }
+    const entrySize = CA_HEADER_SIZE + payloadSize;
+    const paddedSize = (entrySize + 1) & ~1;
+    return { ...p, kind, compressed, entrySize, paddedSize };
+  });
+
+  // Write each entry. CA_NEXT for entry i points at where entry i+1's
+  // CA_HEADER will land; for the last entry (or any entry in diagnostic
+  // mode, which has no CA_NEXT chain), CA_NEXT = 0.
+  for (let i = 0; i < entryPlans.length; i++) {
+    const e = entryPlans[i];
+    const remaining = CART_SIZE - offset;
+    if (e.paddedSize > remaining) {
+      throw new CartOverflowError(e.name, e.paddedSize, remaining);
+    }
+    const nextEntryAddr = (!diagnostic && i + 1 < entryPlans.length)
+      ? CART_ROM_BASE + offset + e.paddedSize
+      : 0;
+    const baseOpts = {
+      name: e.name,
+      initFlagDigit: e.initFlagDigit ?? null,
+      mtime: e.mtime,
+      nextEntryAddr,
+    };
+
+    if (e.kind === 'classic') {
+      writeClassicEntry(view, offset, e.bytes, e.header, {
+        ...baseOpts,
+        bssAddr: e.bssAddr ?? globalBssAddr,
+        diagnostic,
+      });
+    } else if (e.kind === 'compressed') {
+      writeCompressedEntry(view, offset, e.bytes, e.compressed, baseOpts);
+    } else {
+      writeDefaultEntry(view, offset, e.bytes, baseOpts);
+    }
+    offset += e.paddedSize;
+  }
+
+  if (steem) {
+    const prefixed = new Uint8Array(STEEM_PREFIX_SIZE + CART_SIZE);
+    prefixed.set(cart, STEEM_PREFIX_SIZE);
+    return prefixed;
+  }
+  return cart;
+}
+
+// Fill the 128 KB cart buffer with the literal "USM!" pattern (cyclic
+// 4-byte fill, matching usm.c:473-480). Byte-visible in hex dumps for
+// any unused region of the cart.
+function fillUsmPattern(cart) {
+  for (let i = 0; i < cart.length; i += 4) {
+    cart[i] = 0x55;     // 'U'
+    cart[i + 1] = 0x53; // 'S'
+    cart[i + 2] = 0x4D; // 'M'
+    cart[i + 3] = 0x21; // '!'
+  }
+}
+
+// ----- classic-mode.js -----
+// Classic-mode in-ROM relocator. Rewrites every absolute address in
+// TEXT+DATA so the program can run in place from cart ROM:
+//   - References that point into TEXT+DATA become
+//     (CART_ROM_BASE + programOffsetInCart + originalValue).
+//   - References that point into BSS become
+//     (bssAddr + originalValue - program_size).
+// Skipped entirely when the PRG's ABSFLAG is non-zero (the program
+// already promised it has no fixups).
+//
+// Mirrors usm.c:762-813. Both the read of the fixup site and the write
+// of the rewritten value go through DataView big-endian.
+function relocateTextData(view, programOffsetInCart, prgBuf, prgHeader, bssAddr) {
+  if (prgHeader.absflag !== 0) return; // no fixups requested
+
+  const programSize = prgHeader.tsize + prgHeader.dsize;
+  const programStartAddr = (CART_ROM_BASE + programOffsetInCart) >>> 0;
+
+  walkRelocations(prgBuf, prgHeader, (offsetInTextData) => {
+    const cartOffset = programOffsetInCart + offsetInTextData;
+    const original = view.getUint32(cartOffset, /*littleEndian*/ false);
+    const rewritten = original < programSize
+      ? (programStartAddr + original) >>> 0
+      : (bssAddr + original - programSize) >>> 0;
+    view.setUint32(cartOffset, rewritten, /*littleEndian*/ false);
+  });
+}
+
+// ----- ui.js -----
+// USM-web UI. State machine driving the four-step accordion: add files,
+// set options, build, download. The cart-writer engine in
+// src/cart-writer.js does all the byte-level work; this file is glue
+// between the DOM and that engine.
+
+
+const INIT_FLAG_OPTIONS = ['', '0', '1', '3', '5', '6', '7'];
+
+// ----- pure helpers (exported for tests) -----
+
+// Derive the suggested output filename from the first program's stem
+// plus the extension implied by the output format.
+function defaultOutputName(firstProgramName, output) {
+  const stem = (firstProgramName || 'cart').replace(/\.[^.]*$/, '');
+  const ext = output === 'stc' ? '.STC' : '.ROM';
+  return stem.toUpperCase() + ext;
+}
+
+// Format a log event from cart-writer's onLogLine into the same text
+// the C tool prints. Matches usm.c:642-657.
+function formatLogLine(event) {
+  if (event.type === 'compressed') {
+    return `      + ${event.name}: compressed ${event.origSize} -> ${event.compSize} (${event.dataRatio.toFixed(1)}%)`;
+  }
+  if (event.type === 'fallback') {
+    return `      + ${event.name}: no savings (${event.entryRatio.toFixed(0)}% entry), shipping uncompressed`;
+  }
+  return `      + ${event.name}`;
+}
+
+// Parse a hex BSS address (e.g. "20000" -> 0x20000). Returns null on
+// any input that isn't 1..8 hex chars.
+function parseHexAddress(s) {
+  if (typeof s !== 'string') return null;
+  const t = s.trim();
+  if (!/^[0-9A-Fa-f]{1,8}$/.test(t)) return null;
+  return parseInt(t, 16);
+}
+
+// Format file size in a short human-readable way.
+function formatSize(n) {
+  if (n < 1024) return `${n} B`;
+  return `${(n / 1024).toFixed(1)} KB`;
+}
+
+// ----- DOM bootstrap (skipped if `document` isn't available, e.g. in
+// node-only tests).
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initUi);
+}
+
+function initUi() {
+  if (!featureCheck()) return;
+
+  const state = {
+    programs: [],          // { id, file, name, bytes, header, compress, initFlag, bssAddr, error }
+    nextId: 1,
+    output: 'rom',         // 'rom' | 'stc' | 'diag'
+    mode: 'default',       // 'default' | 'classic'
+    globalCompress: false,
+    globalInitFlag: '',    // '' | '0' .. '7'
+    globalBssAddr: '20000',
+    builtCart: null,       // Uint8Array
+    blobUrl: null,         // for revoke()
+  };
+
+  wireStep1(state);
+  wireStep2(state);
+  wireStep3(state);
+  wireStep4(state);
+  wireLogToggle();
+  refreshAll(state);
+}
+
+// ----- feature detection -----
+
+function featureCheck() {
+  const ok =
+    typeof File !== 'undefined' &&
+    typeof Blob !== 'undefined' &&
+    typeof URL !== 'undefined' &&
+    typeof URL.createObjectURL === 'function';
+  if (!ok) {
+    const w = document.getElementById('browserWarning');
+    if (w) w.style.display = 'block';
+    const inp = document.getElementById('fileInput');
+    if (inp) inp.disabled = true;
+    return false;
+  }
+  return true;
+}
+
+// ----- Step 1: file picker + drag-drop + file list -----
+
+function wireStep1(state) {
+  const drop = document.getElementById('dropZone');
+  const input = document.getElementById('fileInput');
+
+  input.addEventListener('change', () => {
+    addFiles(state, Array.from(input.files));
+    input.value = '';  // allow re-selecting the same file
+  });
+
+  drop.addEventListener('dragenter', (e) => { e.preventDefault(); drop.classList.add('drag-active'); });
+  drop.addEventListener('dragover',  (e) => { e.preventDefault(); drop.classList.add('drag-active'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-active'));
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    drop.classList.remove('drag-active');
+    if (e.dataTransfer && e.dataTransfer.files) {
+      addFiles(state, Array.from(e.dataTransfer.files));
+    }
+  });
+}
+
+async function addFiles(state, files) {
+  for (const file of files) {
+    const buf = new Uint8Array(await file.arrayBuffer());
+    const entry = {
+      id: state.nextId++,
+      file,
+      name: file.name,
+      bytes: buf,
+      header: null,
+      compress: state.globalCompress,
+      initFlag: state.globalInitFlag,
+      bssAddr: state.globalBssAddr,
+      error: null,
+    };
+    try {
+      if (buf.length > PRG_MAX_FILE_SIZE) {
+        throw new Error(`file is ${buf.length} bytes, exceeds 128 KB`);
+      }
+      entry.header = parsePrgHeader(buf);
+    } catch (err) {
+      entry.error = err.message;
+    }
+    state.programs.push(entry);
+  }
+  refreshAll(state);
+}
+
+function removeProgram(state, id) {
+  state.programs = state.programs.filter((p) => p.id !== id);
+  refreshAll(state);
+}
+
+function moveProgram(state, id, delta) {
+  const i = state.programs.findIndex((p) => p.id === id);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= state.programs.length) return;
+  const arr = state.programs;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  refreshAll(state);
+}
+
+function renderFileList(state) {
+  const table = document.getElementById('fileList');
+  const tbody = table.querySelector('tbody');
+  const hint = document.getElementById('step1Hint');
+
+  if (state.programs.length === 0) {
+    table.style.display = 'none';
+    hint.textContent = 'No programs yet.';
+    return;
+  }
+  hint.textContent = `${state.programs.length} program${state.programs.length === 1 ? '' : 's'} ready.`;
+  table.style.display = '';
+
+  // Show BSS column only in classic mode.
+  const bssTh = table.querySelector('th.bss-col');
+  bssTh.style.display = state.mode === 'classic' ? '' : 'none';
+
+  tbody.innerHTML = '';
+  state.programs.forEach((p, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${escapeHtml(p.name)}${p.error ? `<div class="row-error">${escapeHtml(p.error)}</div>` : ''}</td>
+      <td>${formatSize(p.bytes.length)}</td>
+      <td><input type="checkbox" class="prog-compress" ${p.compress ? 'checked' : ''}></td>
+      <td>${initFlagSelectHtml(p.initFlag)}</td>
+      <td class="bss-col" style="display:${state.mode === 'classic' ? '' : 'none'}">
+        <input type="text" class="prog-bss" value="${escapeHtml(p.bssAddr)}" size="8">
+      </td>
+      <td class="actions">
+        <button class="move-up" type="button" ${i === 0 ? 'disabled' : ''}>&uarr;</button>
+        <button class="move-down" type="button" ${i === state.programs.length - 1 ? 'disabled' : ''}>&darr;</button>
+        <button class="remove" type="button">Remove</button>
+      </td>
+    `;
+    tr.querySelector('.prog-compress').addEventListener('change', (e) => {
+      p.compress = e.target.checked;
+      refreshAll(state);
+    });
+    tr.querySelector('.prog-initFlag').addEventListener('change', (e) => {
+      p.initFlag = e.target.value;
+      refreshAll(state);
+    });
+    tr.querySelector('.prog-bss').addEventListener('change', (e) => {
+      p.bssAddr = e.target.value;
+      refreshAll(state);
+    });
+    tr.querySelector('.move-up').addEventListener('click', () => moveProgram(state, p.id, -1));
+    tr.querySelector('.move-down').addEventListener('click', () => moveProgram(state, p.id, +1));
+    tr.querySelector('.remove').addEventListener('click', () => removeProgram(state, p.id));
+    tbody.appendChild(tr);
+  });
+}
+
+function initFlagSelectHtml(current) {
+  const opts = INIT_FLAG_OPTIONS.map((v) => {
+    const sel = v === current ? ' selected' : '';
+    const label = v === '' ? '(none)' : `-f${v}`;
+    return `<option value="${v}"${sel}>${label}</option>`;
+  }).join('');
+  return `<select class="prog-initFlag">${opts}</select>`;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ----- Step 2: cart options + validation -----
+
+function wireStep2(state) {
+  for (const r of document.querySelectorAll('input[name="output"]')) {
+    r.addEventListener('change', () => {
+      state.output = r.value;
+      // Diagnostic output implies classic mode; the C tool enforces this
+      // at usm.c:613-621 too.
+      if (state.output === 'diag') state.mode = 'classic';
+      reflectModeToDom(state);
+      refreshAll(state);
+    });
+  }
+  for (const r of document.querySelectorAll('input[name="mode"]')) {
+    r.addEventListener('change', () => {
+      state.mode = r.value;
+      // Switching out of classic clears diagnostic output (incompatible).
+      if (state.mode !== 'classic' && state.output === 'diag') state.output = 'rom';
+      reflectModeToDom(state);
+      refreshAll(state);
+    });
+  }
+  document.getElementById('globalCompress').addEventListener('change', (e) => {
+    state.globalCompress = e.target.checked;
+  });
+  document.getElementById('globalInitFlag').addEventListener('change', (e) => {
+    state.globalInitFlag = e.target.value;
+  });
+  document.getElementById('globalBssAddr').addEventListener('change', (e) => {
+    state.globalBssAddr = e.target.value;
+    refreshAll(state);
+  });
+}
+
+function reflectModeToDom(state) {
+  // Sync the output and mode radios with state (in case we changed them
+  // programmatically via the diagnostic <-> classic coupling above).
+  for (const r of document.querySelectorAll('input[name="output"]')) {
+    r.checked = r.value === state.output;
+  }
+  for (const r of document.querySelectorAll('input[name="mode"]')) {
+    r.checked = r.value === state.mode;
+  }
+  // Show / hide the global BSS field and the per-row BSS column.
+  for (const el of document.querySelectorAll('.classic-only')) {
+    el.style.display = state.mode === 'classic' ? '' : 'none';
+  }
+}
+
+// Compute per-program resolved options + the (classic, diagnostic) flags
+// + a list of human-readable errors. Used by both the inline validation
+// banner (Step 2) and the actual build call (Step 3).
+function resolveCartOptions(state) {
+  const errors = [];
+  const classic = state.mode === 'classic';
+  const diagnostic = state.output === 'diag';
+  const steem = state.output === 'stc';
+
+  if (state.programs.length === 0) {
+    errors.push('Add at least one program in Step 1.');
+  }
+  for (const p of state.programs) {
+    if (p.error) errors.push(`${p.name}: ${p.error}`);
+  }
+  if (diagnostic && state.programs.length > 1) {
+    errors.push('Diagnostic carts must contain exactly one program (drop the extras or pick a different output format).');
+  }
+
+  const globalBss = parseHexAddress(state.globalBssAddr);
+  if (classic && globalBss === null) {
+    errors.push(`Global BSS address "${state.globalBssAddr}" is not valid hex.`);
+  }
+  for (const p of state.programs) {
+    if (classic) {
+      if (parseHexAddress(p.bssAddr) === null) {
+        errors.push(`${p.name}: BSS address "${p.bssAddr}" is not valid hex.`);
+      }
+    }
+    if (diagnostic && p.compress) {
+      errors.push(`${p.name}: -z (compress) is incompatible with diagnostic carts.`);
+    }
+    if (classic && p.compress) {
+      errors.push(`${p.name}: -z (compress) is incompatible with classic mode.`);
+    }
+  }
+
+  const resolvedPrograms = state.programs.map((p) => ({
+    name: p.name,
+    bytes: p.bytes,
+    compress: classic || diagnostic ? false : p.compress,
+    initFlagDigit: p.initFlag === '' ? null : parseInt(p.initFlag, 10),
+    bssAddr: classic ? (parseHexAddress(p.bssAddr) ?? globalBss ?? DEFAULT_BSS_ADDR) : undefined,
+    mtime: new Date(p.file.lastModified),
+  }));
+
+  return { errors, classic, diagnostic, steem, globalBssAddr: globalBss ?? DEFAULT_BSS_ADDR, resolvedPrograms };
+}
+
+function renderStep2Errors(state) {
+  const banner = document.getElementById('step2Errors');
+  const { errors } = resolveCartOptions(state);
+  if (errors.length === 0) {
+    banner.style.display = 'none';
+    banner.textContent = '';
+    return;
+  }
+  banner.style.display = '';
+  banner.innerHTML = '<strong>Resolve before building:</strong><ul style="margin:6px 0 0;padding-left:20px;">' +
+    errors.map((e) => `<li>${escapeHtml(e)}</li>`).join('') + '</ul>';
+}
+
+// ----- Step 3: build -----
+
+function wireStep3(state) {
+  document.getElementById('buildBtn').addEventListener('click', () => doBuild(state));
+}
+
+function doBuild(state) {
+  const { errors, classic, diagnostic, steem, globalBssAddr, resolvedPrograms } = resolveCartOptions(state);
+  if (errors.length > 0) return; // step gating shouldn't allow this, but be safe
+
+  clearLog();
+  setProgress(0);
+  appendLogLine('==> Building cart');
+
+  let done = 0;
+  try {
+    state.builtCart = buildCart({
+      programs: resolvedPrograms,
+      steem,
+      classic,
+      diagnostic,
+      globalBssAddr,
+      onLogLine: (event) => {
+        appendLogLine(formatLogLine(event));
+        done++;
+        setProgress(Math.round((done / resolvedPrograms.length) * 100));
+      },
+    });
+    setProgress(100);
+    appendLogLine(`==> Cart ready (${state.builtCart.length} bytes)`);
+  } catch (err) {
+    appendLogLine(`!! Build failed: ${err.message}`);
+    state.builtCart = null;
+    refreshAll(state);
+    return;
+  }
+
+  setupDownload(state);
+  refreshAll(state);
+}
+
+function clearLog() {
+  document.getElementById('log').textContent = '';
+}
+
+function appendLogLine(text) {
+  const log = document.getElementById('log');
+  log.textContent += (log.textContent ? '\n' : '') + text;
+  log.scrollTop = log.scrollHeight;
+}
+
+function setProgress(pct) {
+  document.getElementById('prog').value = pct;
+  document.getElementById('progLabel').textContent = `${pct}%`;
+}
+
+// ----- Step 4: download + reset -----
+
+function wireStep4(state) {
+  document.getElementById('outputName').addEventListener('change', (e) => {
+    document.getElementById('downloadLink').download = e.target.value;
+  });
+  document.getElementById('resetBtn').addEventListener('click', () => resetState(state));
+}
+
+function setupDownload(state) {
+  const first = state.programs[0];
+  const name = defaultOutputName(first ? first.name : 'cart', state.output);
+  const link = document.getElementById('downloadLink');
+  const nameInput = document.getElementById('outputName');
+  nameInput.value = name;
+  if (state.blobUrl) URL.revokeObjectURL(state.blobUrl);
+  state.blobUrl = URL.createObjectURL(new Blob([state.builtCart], { type: 'application/octet-stream' }));
+  link.href = state.blobUrl;
+  link.download = name;
+  link.style.display = '';
+  document.getElementById('fileName').textContent = `Cart: ${name} (${state.builtCart.length} bytes)`;
+}
+
+function resetState(state) {
+  if (state.blobUrl) {
+    URL.revokeObjectURL(state.blobUrl);
+    state.blobUrl = null;
+  }
+  state.programs = [];
+  state.builtCart = null;
+  document.getElementById('outputName').value = '';
+  document.getElementById('downloadLink').style.display = 'none';
+  document.getElementById('fileName').textContent = 'Cart: (no build yet)';
+  setProgress(0);
+  clearLog();
+  refreshAll(state);
+}
+
+// ----- log pane toggle -----
+
+function wireLogToggle() {
+  const btn = document.getElementById('toggleLog');
+  const log = document.getElementById('log');
+  btn.addEventListener('click', () => {
+    const showing = log.style.display !== 'none';
+    log.style.display = showing ? 'none' : '';
+    btn.textContent = showing ? 'Show process output' : 'Hide process output';
+  });
+}
+
+// ----- step gating + visual state -----
+
+function refreshAll(state) {
+  renderFileList(state);
+  renderStep2Errors(state);
+  updateGating(state);
+}
+
+function updateGating(state) {
+  const { errors } = resolveCartOptions(state);
+  const hasFiles = state.programs.length > 0;
+  const valid = hasFiles && errors.length === 0;
+  const built = state.builtCart != null;
+
+  setStep('step1', hasFiles ? 'complete' : 'active');
+  setStep('step2', !hasFiles ? 'pending' : (valid ? 'complete' : 'active'));
+  setStep('step3', !valid ? 'pending' : (built ? 'complete' : 'active'));
+  setStep('step4', !built ? 'pending' : 'active');
+
+  document.getElementById('buildBtn').disabled = !valid || built;
+}
+
+function setStep(id, mode) {
+  const li = document.getElementById(id);
+  if (!li) return;
+  li.classList.remove('active', 'complete');
+  if (mode === 'active' || mode === 'complete') li.classList.add(mode);
+  const status = li.querySelector('.step-status');
+  if (status) {
+    status.textContent =
+      mode === 'active'   ? 'Ready' :
+      mode === 'complete' ? 'Done'  :
+                            'Pending';
+  }
+}
+</script>
+
+</body>
+</html>

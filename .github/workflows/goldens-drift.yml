@@ -1,0 +1,85 @@
+name: goldens-drift
+
+# Weekly + manual: rebuild the upstream usm at the pinned SHA and verify
+# every committed golden ROM is still byte-identical to what that build
+# produces. Catches:
+#   - committed goldens silently corrupted (hand-edit, merge mishap).
+#   - changes in the CI toolchain (gcc, glibc) that subtly alter usm's
+#     output.
+#
+# Does NOT catch upstream landing new commits beyond the pin — that's
+# intentional. To pick those up, follow tests/PIN-BUMP.md.
+
+on:
+  schedule:
+    # Mondays at 06:00 UTC.
+    - cron: '0 6 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install gcc
+        run: sudo apt-get update && sudo apt-get install -y gcc
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Verify goldens against the pinned upstream SHA
+        id: verify
+        run: |
+          rm -rf tests/.upstream-clone   # force a fresh clone for honesty
+          node tests/goldens.mjs --verify
+
+      - name: Open an issue on drift
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'Goldens drift detected at the pinned upstream SHA';
+            const body = [
+              'The weekly goldens-drift workflow found that one or more committed ',
+              '`tests/golden/*.ROM` files no longer match what upstream `usm` at ',
+              'the pinned SHA produces.',
+              '',
+              'See [`tests/PIN-BUMP.md`](../blob/main/tests/PIN-BUMP.md) for what ',
+              'this might mean and how to handle it. **Do not reflexively bump the ',
+              'pin** — investigate why the diff appeared first.',
+              '',
+              `Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            ].join('\n');
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'goldens-drift',
+            });
+            if (existing.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['goldens-drift'],
+              });
+            }
