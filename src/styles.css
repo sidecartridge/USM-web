@@ -1,0 +1,310 @@
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0b0f17;
+  color: #e5e7eb;
+  padding: 20px;
+}
+
+#app {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+#browserWarning {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto 16px;
+}
+
+.top-banner {
+  width: 100%;
+  max-width: 1080px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid rgba(15, 18, 28, 0.12);
+  border-radius: 16px;
+  background: rgba(245, 246, 250, 0.92);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(6px);
+  margin: 0 auto 16px;
+}
+
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #11131a;
+  text-decoration: none;
+}
+
+.brand-link img {
+  display: block;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+}
+
+.brand-wordmark {
+  height: 24px;
+  width: auto;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #1b2435;
+  text-decoration: none;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(27, 33, 48, 0.22);
+  background: rgba(229, 233, 244, 0.85);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.back-link:hover {
+  border-color: rgba(27, 33, 48, 0.42);
+  background: rgba(255, 255, 255, 0.95);
+  color: #0b0f18;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15, 18, 28, 0.18);
+}
+
+button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #f97316;
+  font-weight: 600;
+  color: #0b0f17;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+.steps {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  background: #0f172a;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.step-header span {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.step-content {
+  max-height: 0;
+  opacity: 0;
+  padding: 0 12px;
+  color: #cbd5f5;
+  transition: max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+}
+
+.step.active .step-content,
+.step.complete .step-content {
+  max-height: 1200px;
+  opacity: 1;
+  padding: 8px 12px 12px;
+}
+
+.step.complete .step-header {
+  color: #86efac;
+}
+
+pre {
+  background: #111827;
+  padding: 10px;
+  border-radius: 6px;
+  height: 220px;
+  overflow: auto;
+}
+
+progress {
+  width: 100%;
+  height: 18px;
+  appearance: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+progress::-webkit-progress-value {
+  background: #3b82f6;
+}
+
+progress::-moz-progress-bar {
+  background: #3b82f6;
+}
+
+.progress-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+/* Drop zone (Step 1). */
+.drop-zone {
+  border: 2px dashed #334155;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  background: #0b1220;
+  color: #cbd5f5;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.drop-zone.drag-active {
+  border-color: #f97316;
+  background: #1e293b;
+}
+
+.drop-zone .browse-link {
+  color: #fde047;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* File list (Step 1). */
+.file-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+.file-list th, .file-list td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #1f2937;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.file-list th {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.file-list td.actions button {
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  background: #1f2937;
+  color: #f9fafb;
+  margin-right: 4px;
+}
+
+.file-list td.actions button.remove {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+.file-list td input[type="text"], .file-list td select {
+  background: #0b1220;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.file-list td.row-error {
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+/* Cart options form (Step 2). */
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.options-grid fieldset {
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 0;
+  background: #0b1220;
+}
+
+.options-grid fieldset legend {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  padding: 0 6px;
+}
+
+.options-grid label {
+  display: block;
+  margin: 4px 0;
+  color: #cbd5f5;
+  font-size: 0.9rem;
+}
+
+.options-grid input[type="text"], .options-grid select {
+  background: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+/* Error banner used by Step 2 validation. */
+.error-banner {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #7f1d1d;
+  color: #fecaca;
+  font-size: 0.9rem;
+}
+
+/* Generic muted hint text. */
+.hint {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}

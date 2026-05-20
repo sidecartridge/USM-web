@@ -1,0 +1,21 @@
+{
+  "name": "usm-web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Browser port of atarist-USM: package Atari ST .PRG/.TOS programs into 128 KB cartridge ROM images.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify-goldens": "node tests/goldens.mjs --verify",
+    "regen-goldens": "node tests/goldens.mjs --regen",
+    "roundtrip": "node tests/cli/roundtrip.mjs"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

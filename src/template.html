@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>USM — Atari ST Cart Image Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500&display=swap" rel="stylesheet">
+<style>
+{{STYLES}}
+</style>
+<script>
+// Last-ditch surfacing of a top-level module-load failure (most likely:
+// the LZSS self-test threw). The bundle's <script type="module"> below
+// has no DOMContentLoaded handler to catch that, so we register here
+// before it runs.
+window.addEventListener('error', function (e) {
+  var w = document.getElementById('browserWarning');
+  if (w) {
+    w.style.display = 'block';
+    w.textContent = 'USM-web hit a startup error: ' + (e.message || 'unknown');
+  }
+});
+</script>
+</head>
+
+<body>
+
+<nav class="top-banner">
+  <a class="brand-link" href="https://sidecartridge.com" target="_blank" rel="noopener">
+    <img class="brand-mark" src="https://sidecartridge.com/assets/images/logo/logo.png" alt="SidecarTridge logo mark">
+    <img class="brand-wordmark" src="https://sidecartridge.com/assets/images/logo/logo-text.png" alt="SidecarTridge">
+  </a>
+  <a href="https://sidecartridge.com" id="backLink" class="back-link">&#8592; Back</a>
+</nav>
+
+<div id="browserWarning" style="display:none; padding:12px; background:#7f1d1d; border-radius:6px; margin-bottom:16px;">
+  Your browser doesn't support the File or Blob APIs that USM-web needs. Please use a recent version of Chrome, Firefox, or Safari.
+</div>
+
+<div id="app">
+  <h2>USM — Atari ST Cart Image Builder</h2>
+  <p style="margin-top:6px; color:#cbd5f5;">
+    Pack one or more Atari ST <code>.PRG</code> / <code>.TOS</code> programs into a 128&nbsp;KB cartridge ROM image.
+    Output works in Hatari, STEem, or on real cart hardware via the
+    <a href="https://sidecartridge.com/products/sidecartridge-multidevice-atari-st/" target="_blank" rel="noopener" style="color:#fde047;">SidecarTridge Multidevice</a>.
+  </p>
+
+  <ul class="steps" id="steps">
+
+    <li id="step1" class="step active">
+      <div class="step-header">Step 1/4 — Add programs <span class="step-status">Ready</span></div>
+      <div class="step-content">
+        <div id="dropZone" class="drop-zone">
+          Drag and drop one or more <code>.PRG</code> / <code>.TOS</code> files here, or
+          <label for="fileInput" class="browse-link">browse</label>.
+          <input type="file" id="fileInput" multiple accept=".prg,.tos,.PRG,.TOS,application/octet-stream" style="display:none">
+        </div>
+        <table id="fileList" class="file-list" style="display:none">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>File</th>
+              <th>Size</th>
+              <th>Compress (-z)</th>
+              <th>Init flag (-f)</th>
+              <th class="bss-col" style="display:none">BSS (-b)</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="step1Hint" class="hint" style="margin-top:8px;">No programs yet.</div>
+      </div>
+    </li>
+
+    <li id="step2" class="step">
+      <div class="step-header">Step 2/4 — Cart options <span class="step-status">Pending</span></div>
+      <div class="step-content">
+        <div class="options-grid">
+          <fieldset>
+            <legend>Output format</legend>
+            <label><input type="radio" name="output" value="rom" checked> <code>.ROM</code> &mdash; standard cart</label>
+            <label><input type="radio" name="output" value="stc"> <code>.STC</code> &mdash; STEem prefix (-s)</label>
+            <label><input type="radio" name="output" value="diag"> Diagnostic cart (-d)</label>
+          </fieldset>
+          <fieldset>
+            <legend>Mode</legend>
+            <label><input type="radio" name="mode" value="default" checked> Default &mdash; stub loader</label>
+            <label><input type="radio" name="mode" value="classic"> Classic (-c) &mdash; in-ROM</label>
+          </fieldset>
+          <fieldset style="grid-column: 1 / -1;">
+            <legend>Defaults for newly added programs</legend>
+            <label>
+              <input type="checkbox" id="globalCompress"> Compress (-z) by default
+            </label>
+            <label>
+              Init flag (-f):
+              <select id="globalInitFlag">
+                <option value="">(none — manual launch from c: drive)</option>
+                <option value="0">0 — prior to display + IRQ init</option>
+                <option value="1">1 — just before GEMDOS init</option>
+                <option value="3">3 — prior to boot disk</option>
+                <option value="5">5 — Desk Accessory</option>
+                <option value="6">6 — non-GEM application</option>
+                <option value="7">7 — needs parameters</option>
+              </select>
+            </label>
+            <label class="classic-only" style="display:none;">
+              BSS address (-b, hex):
+              <input type="text" id="globalBssAddr" value="20000" pattern="[0-9A-Fa-f]+" size="10">
+              <span class="hint">(default 20000)</span>
+            </label>
+          </fieldset>
+        </div>
+        <div id="step2Errors" class="error-banner" style="display:none;"></div>
+      </div>
+    </li>
+
+    <li id="step3" class="step">
+      <div class="step-header">Step 3/4 — Build <span class="step-status">Pending</span></div>
+      <div class="step-content">
+        <p>Click <strong>Build cart</strong>. Per-program compression results stream into the log below.</p>
+        <button id="buildBtn" type="button" disabled>Build cart</button>
+      </div>
+    </li>
+
+    <li id="step4" class="step">
+      <div class="step-header">Step 4/4 — Download <span class="step-status">Pending</span></div>
+      <div class="step-content">
+        <label>File name: <input type="text" id="outputName" size="32"></label>
+        <a id="downloadLink" href="#" download="" style="display:none; margin-left:12px; padding:8px 14px; border-radius:6px; background:#fde047; color:#111827; font-weight:600; text-decoration:none;">Download</a>
+        <button id="resetBtn" type="button" style="margin-left:12px; background:#1f2937; color:#f9fafb;">Build another</button>
+      </div>
+    </li>
+
+  </ul>
+
+  <div id="fileName" style="margin:8px 0 6px; color:#cbd5f5;">Cart: (no build yet)</div>
+  <div class="progress-wrap">
+    <progress id="prog" value="0" max="100"></progress>
+    <div id="progLabel" class="progress-label">0%</div>
+  </div>
+
+  <div style="margin:10px 0 6px; color:#cbd5f5; display:flex; align-items:center; gap:8px;">
+    <button id="toggleLog" type="button" style="background:#1f2937; color:#f9fafb;">Hide process output</button>
+  </div>
+  <pre id="log"></pre>
+</div>
+
+<script type="module">
+{{SCRIPT}}
+</script>
+
+</body>
+</html>
