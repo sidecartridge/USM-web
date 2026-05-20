@@ -13,7 +13,7 @@
     "roundtrip": "node tests/cli/roundtrip.mjs"
   },
   "devDependencies": {
-    "vitest": "^1.6.0"
+    "vitest": "^4.1.7"
   },
   "engines": {
     "node": ">=20"
