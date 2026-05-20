@@ -2,11 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-See also: `AGENTS.md` (project layout, build prereqs, code style, workflow rules), `README.md` (user-facing usage), and the upstream C tool at [`atarist-USM`](https://github.com/sidecartridge/atarist-USM) — this is a browser port.
+See also: `AGENTS.md` (project layout, build prereqs, code style, workflow rules), `README.md` (user-facing usage), and the upstream C tool at [`atarist-USM`](https://github.com/sidecartridge/USM) — this is a browser port.
 
 ## What this is
 
-USM-web is a single-file browser application (`index.html`) that packages Atari ST `.PRG` / `.TOS` programs into 128 KB cartridge ROM images. It is a JavaScript port of the C tool [`atarist-USM`](https://github.com/sidecartridge/atarist-USM) and is held to **byte-for-byte parity** with that tool for the same inputs.
+USM-web is a single-file browser application (`index.html`) that packages Atari ST `.PRG` / `.TOS` programs into 128 KB cartridge ROM images. It is a JavaScript port of the C tool [`atarist-USM`](https://github.com/sidecartridge/USM) and is held to **byte-for-byte parity** with that tool for the same inputs.
 
 ## Build / run / test
 
@@ -78,6 +78,7 @@ When writing a commit, describe the change in its own terms ("inline src/ into i
 - **`src/stubs/*.bin` are frozen.** See "Things that bite".
 - **No bundler, no transpiler, no TypeScript.** The build is `build.mjs` plus Node 20. Adding a dependency is a deliberate decision; the only runtime dependency for now is Vitest, dev-only.
 - **Match existing JS style.** 2-space indent, semicolons, ES2022 modules, named functions over arrow expressions for top-level definitions, named exports only.
+- **No staging.** Every merge to `main` is published live at <https://usm.sidecartridge.com/> via GitHub Pages. Test locally with `npm run build && python3 -m http.server` before merging; there is no preview branch to catch a bad UI change after the fact.
 
 ---
 
