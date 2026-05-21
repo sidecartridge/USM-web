@@ -133,9 +133,13 @@ function main() {
   const styles = readText(join(SRC, 'styles.css'));
   const script = buildScriptBody();
 
+  // Use the function form of String.replace so `$&`, `$'`, `$\``, `$1`
+  // back-references in the replacement string are NOT interpreted —
+  // critical because the script body can legitimately contain
+  // sequences like `'$'` (e.g. formatAddr's return string).
   let out = template;
-  out = out.replace('{{STYLES}}', styles.trimEnd());
-  out = out.replace('{{SCRIPT}}', script.trimEnd());
+  out = out.replace('{{STYLES}}', () => styles.trimEnd());
+  out = out.replace('{{SCRIPT}}', () => script.trimEnd());
 
   // Normalize to LF line endings; never embed timestamps or host paths.
   out = out.replace(/\r\n/g, '\n');
