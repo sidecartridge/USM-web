@@ -37,6 +37,7 @@ const MODULE_ORDER = [
   'gemdos.js',
   'cart-writer.js',
   'classic-mode.js',
+  'help-content.js',
   'ui.js',
 ];
 
