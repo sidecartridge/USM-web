@@ -19,7 +19,7 @@ describe('gemdosTimeDate', () => {
 
   it('rounds odd-second timestamps down (2-second granularity)', () => {
     const { time } = gemdosTimeDate(new Date('2024-01-15T13:45:31Z'));
-    // (31 / 2) integer truncated to 15 — same as the C `seconds / 2`.
+    // (31 / 2) integer truncated to 15, same as the C `seconds / 2`.
     expect(time & 0x1F).toBe(15);
   });
 
@@ -73,7 +73,7 @@ describe('toEightThreeName', () => {
     expect(decode(toEightThreeName('foo.EXTRA'))).toBe('FOO.EXT');
   });
 
-  it('handles names with multiple dots — first dot ends base', () => {
+  it('handles names with multiple dots, first dot ends base', () => {
     expect(decode(toEightThreeName('a.b.c'))).toBe('A.B.C');
   });
 

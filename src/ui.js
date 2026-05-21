@@ -43,7 +43,7 @@ export function formatLogLine(event) {
         : event.mode === 'compressed'
           ? 'compressed mode, stub + size + payload'
           : 'default mode, stub + PRG';
-      return `      Layout: ${label} — CA_HEADER at ${header}, payload at ${payload} (${event.payloadSize} bytes)${padded}`;
+      return `      Layout: ${label}. CA_HEADER at ${header}, payload at ${payload} (${event.payloadSize} bytes)${padded}`;
     }
     case 'fixups':
       if (event.count === 0) {
@@ -237,11 +237,13 @@ async function addFiles(state, files) {
     }
     state.programs.push(entry);
   }
+  invalidateBuild(state);
   refreshAll(state);
 }
 
 function removeProgram(state, id) {
   state.programs = state.programs.filter((p) => p.id !== id);
+  invalidateBuild(state);
   refreshAll(state);
 }
 
@@ -251,6 +253,7 @@ function moveProgram(state, id, delta) {
   if (i < 0 || j < 0 || j >= state.programs.length) return;
   const arr = state.programs;
   [arr[i], arr[j]] = [arr[j], arr[i]];
+  invalidateBuild(state);
   refreshAll(state);
 }
 
@@ -291,14 +294,17 @@ function renderFileList(state) {
     `;
     tr.querySelector('.prog-compress').addEventListener('change', (e) => {
       p.compress = e.target.checked;
+      invalidateBuild(state);
       refreshAll(state);
     });
     tr.querySelector('.prog-initFlag').addEventListener('change', (e) => {
       p.initFlag = e.target.value;
+      invalidateBuild(state);
       refreshAll(state);
     });
     tr.querySelector('.prog-bss').addEventListener('change', (e) => {
       p.bssAddr = e.target.value;
+      invalidateBuild(state);
       refreshAll(state);
     });
     tr.querySelector('.move-up').addEventListener('click', () => moveProgram(state, p.id, -1));
@@ -335,6 +341,7 @@ function wireStep2(state) {
       // at usm.c:613-621 too.
       if (state.output === 'diag') state.mode = 'classic';
       reflectModeToDom(state);
+      invalidateBuild(state);
       refreshAll(state);
     });
   }
@@ -344,9 +351,13 @@ function wireStep2(state) {
       // Switching out of classic clears diagnostic output (incompatible).
       if (state.mode !== 'classic' && state.output === 'diag') state.output = 'rom';
       reflectModeToDom(state);
+      invalidateBuild(state);
       refreshAll(state);
     });
   }
+  // The three "defaults for newly added programs" controls only affect
+  // FUTURE files (not the existing list). Their change doesn't
+  // invalidate the current build's bytes.
   document.getElementById('globalCompress').addEventListener('change', (e) => {
     state.globalCompress = e.target.checked;
   });
@@ -547,6 +558,26 @@ function wireLogToggle() {
 }
 
 // ----- step gating + visual state -----
+
+// Any user-initiated change to programs or options invalidates the
+// previous build: the byte output would differ now. Clears the built
+// cart, revokes the blob URL, hides the download link, and resets the
+// summary line so the user can't accidentally download stale bytes.
+// Called by every mutator (addFiles, removeProgram, moveProgram, option
+// changes); NOT called from doBuild itself.
+function invalidateBuild(state) {
+  if (state.builtCart == null) return;
+  state.builtCart = null;
+  if (state.blobUrl) {
+    URL.revokeObjectURL(state.blobUrl);
+    state.blobUrl = null;
+  }
+  const link = document.getElementById('downloadLink');
+  if (link) link.style.display = 'none';
+  const fileName = document.getElementById('fileName');
+  if (fileName) fileName.textContent = 'Cart: (no build yet)';
+  setProgress(0);
+}
 
 function refreshAll(state) {
   renderFileList(state);

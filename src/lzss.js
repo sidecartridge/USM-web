@@ -1,4 +1,4 @@
-// LZSS-12-4 codec — byte-faithful port of lzss_compress / lzss_decompress
+// LZSS-12-4 codec, byte-faithful port of lzss_compress / lzss_decompress
 // from atarist-USM/usm.c. The encoder makes the same greedy match decisions
 // in the same order as the C reference, so its output is byte-identical.
 //
@@ -8,7 +8,7 @@
 //   1 -> next 2 bytes are a back-reference, big-endian, packed as
 //        ((offset - 1) << 4) | (length - 3). Offset 1..4096 (12 bits).
 //        Length 3..18 (4 bits).
-// No EOF marker — the decoder is driven by an explicit expected size
+// No EOF marker, the decoder is driven by an explicit expected size
 // (the cart writer stores it as a 4-byte big-endian LONG before the
 // compressed payload).
 
@@ -129,7 +129,7 @@ const SELFTEST_BUFFER = (() => {
 
 // Quick startup self-test. Runs once on module load (below) and is also
 // exported so tests can call it explicitly. Throws on any failure so the
-// module's top-level import in src/ui.js fails noisily — same behavior
+// module's top-level import in src/ui.js fails noisily, same behavior
 // as the C tool which exits early at usm.c:363.
 export function lzssSelftest() {
   const comp = lzssCompress(SELFTEST_BUFFER);

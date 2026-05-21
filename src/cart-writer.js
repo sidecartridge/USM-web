@@ -17,7 +17,7 @@ export function writeBE16(view, offset, value) {
   view.setUint16(offset, value & 0xffff, /*littleEndian*/ false);
 }
 
-// CA_HEADER record layout (34 bytes) — matches the struct at
+// CA_HEADER record layout (34 bytes), matches the struct at
 // atarist-USM/usm.c:29-47.
 export const CA_HEADER_SIZE = 34;
 
@@ -69,7 +69,7 @@ export function writeCaHeader(view, offset, fields) {
 // whole chain has been laid out.
 //
 // `initFlagDigit` is the -fY digit (0/1/3/5/6/7) or null/undefined for
-// "no auto-run flag set" — the C tool's distinction between
+// "no auto-run flag set", the C tool's distinction between
 // "global_init_flag = 0" (no -f anywhere) and "-f0".
 export function writeDefaultEntry(view, offset, prgBytes, opts) {
   const { name, initFlagDigit, mtime, nextEntryAddr } = opts;
@@ -118,7 +118,7 @@ export class CartOverflowError extends Error {
 
 // Run LZSS-12-4 on prgBytes and decide whether the compressed entry is
 // actually smaller than the uncompressed one. Matches the auto-fallback
-// rule in usm.c:638 — compressed_entry < uncompressed_entry counts the
+// rule in usm.c:638, compressed_entry < uncompressed_entry counts the
 // difference between the 236-byte and 304-byte stubs, so tiny inputs
 // usually fail the test even when the raw data shrinks.
 //
@@ -185,7 +185,7 @@ export function writeCompressedEntry(view, offset, prgBytes, compressed, opts) {
 
 // Classic-mode entry layout (per usm.c:750-815):
 //   [ CA_HEADER (34 B, omitted when diagnostic) ][ relocated TEXT+DATA ]
-// No stub, no PRG header. program_size = (tsize+dsize+1) & ~1 — the
+// No stub, no PRG header. program_size = (tsize+dsize+1) & ~1, the
 // extra byte (when the file is odd-sized) comes from the byte after
 // TEXT+DATA in the original PRG, matching usm.c:623.
 //
@@ -207,7 +207,7 @@ export function writeClassicEntry(view, offset, prgBuf, prgHeader, opts) {
   let programOffsetInCart;
   let bytesWritten;
   if (diagnostic) {
-    // Diagnostic carts skip the CA_HEADER entirely — the OS jumps
+    // Diagnostic carts skip the CA_HEADER entirely, the OS jumps
     // straight to programOffsetInCart after reset.
     programOffsetInCart = offset;
     bytesWritten = program_size;
@@ -298,7 +298,7 @@ export function buildCart({
   let offset = 4;
 
   // Pre-compute each entry's payload + padded footprint so we can resolve
-  // CA_NEXT at write time. Compression runs here, too — caller-visible
+  // CA_NEXT at write time. Compression runs here, too, caller-visible
   // log events are emitted in this loop so the UI streams them in the
   // same order as the C tool's stdout.
   const entryPlans = programs.map((p) => {
@@ -413,7 +413,7 @@ export function buildCart({
   }
 
   // Final summary. usmFillBytes is the count of cart bytes at the tail
-  // still matching the cyclic USM! pattern at their offsets — bytes
+  // still matching the cyclic USM! pattern at their offsets, bytes
   // overwritten by entries (or by entries' padding zero) don't count.
   const usmFillBytes = countTrailingUsmFill(cart);
   onLogLine?.({

@@ -19,7 +19,7 @@ These are freely redistributable and live in the repo. CI uses them.
 
 Third-party PRGs from `atarist-USM/tests/binaries/` (MONST2, RAID, SYSINFO, SILYCMP, SWITV310) are not redistributable here and are NOT committed. The corresponding golden ROMs are also not committed.
 
-If a contributor places those files at `tests/binaries/<NAME>.PRG` locally, they can extend `tests/goldens.flags.js` and `tests/goldens.mjs` to cover the additional combos. This is local-only — CI never sees them.
+If a contributor places those files at `tests/binaries/<NAME>.PRG` locally, they can extend `tests/goldens.flags.js` and `tests/goldens.mjs` to cover the additional combos. This is local-only. CI never sees them.
 
 ## Regenerating `synth.prg`
 

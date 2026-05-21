@@ -2,5 +2,5 @@
   "upstreamRepo": "https://github.com/sidecartridge/USM",
   "upstreamCommit": "182d85ad96a7eab114c7de106bca47f09c9a47ae",
   "fixedMtime": "2024-01-15T13:45:30Z",
-  "comment": "upstreamCommit is the atarist-USM SHA the committed tests/golden/*.ROM files were generated from. Bumping it is a deliberate operation — see tests/PIN-BUMP.md. fixedMtime is touch'd onto every fixture before usm runs (and injected into the JS port via mtime: new Date(fixedMtime)) so CA_TIME / CA_DATE land deterministically."
+  "comment": "upstreamCommit is the atarist-USM SHA the committed tests/golden/*.ROM files were generated from. Bumping it is a deliberate operation, see tests/PIN-BUMP.md. fixedMtime is touch'd onto every fixture before usm runs (and injected into the JS port via mtime: new Date(fixedMtime)) so CA_TIME / CA_DATE land deterministically."
 }

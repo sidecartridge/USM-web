@@ -70,7 +70,7 @@ describe('walkRelocations', () => {
 
   it('throws when the reloc table is missing the 4-byte first LONG', () => {
     const text = new Uint8Array(16);
-    const reloc = new Uint8Array([0, 0, 0]); // 3 bytes — short
+    const reloc = new Uint8Array([0, 0, 0]); // 3 bytes, short
     const prg = buildPrg({ text, reloc });
     expect(() => walkRelocations(prg, parsed(text, reloc), () => {}))
       .toThrow(/extends past end of file/);
@@ -78,7 +78,7 @@ describe('walkRelocations', () => {
 
   it('throws when the reloc stream is missing a terminator', () => {
     const text = new Uint8Array(16);
-    // first LONG = 4 (one fixup) then EOF — no terminator byte.
+    // first LONG = 4 (one fixup) then EOF, no terminator byte.
     const reloc = new Uint8Array([0, 0, 0, 4]);
     const prg = buildPrg({ text, reloc });
     expect(() => walkRelocations(prg, parsed(text, reloc), () => {}))

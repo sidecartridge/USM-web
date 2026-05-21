@@ -1,4 +1,4 @@
-// PRG header parsing — matches the PRG_HEADER struct in
+// PRG header parsing, matches the PRG_HEADER struct in
 // atarist-USM/usm.c:49-59. The header is 28 bytes, big-endian
 // throughout, prefixing TEXT, DATA, BSS, symbol-table, and relocation
 // sections in a standard Atari ST executable.

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { lzssCompress, lzssDecompress, LZSS_MAX_MATCH, LZSS_WIN_SIZE } from '../../src/lzss.js';
 
-describe('lzssDecompress — structural smoke', () => {
+describe('lzssDecompress, structural smoke', () => {
   it('decodes a single literal byte', () => {
     const out = lzssDecompress(new Uint8Array([0x00, 0x42]), 1);
     expect(Array.from(out)).toEqual([0x42]);
@@ -25,7 +25,7 @@ describe('lzssDecompress — structural smoke', () => {
   });
 });
 
-describe('lzssDecompress — error paths', () => {
+describe('lzssDecompress, error paths', () => {
   it('throws when source is exhausted mid-flag', () => {
     expect(() => lzssDecompress(new Uint8Array([]), 1))
       .toThrow(/source exhausted/);
