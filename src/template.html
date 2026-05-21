@@ -49,7 +49,7 @@ window.addEventListener('error', function (e) {
   <ul class="steps" id="steps">
 
     <li id="step1" class="step active">
-      <div class="step-header">Step 1/4 — Add programs <span class="step-status">Ready</span></div>
+      <div class="step-header">Step 1/4 — Add programs <button type="button" class="help-icon" data-help-key="add-programs" aria-label="Help: Step 1 — Add programs" title="Step 1 — Add programs">?</button> <span class="step-status">Ready</span></div>
       <div class="step-content">
         <div id="dropZone" class="drop-zone">
           Drag and drop one or more <code>.PRG</code> / <code>.TOS</code> files here, or
@@ -62,8 +62,8 @@ window.addEventListener('error', function (e) {
               <th>#</th>
               <th>File</th>
               <th>Size</th>
-              <th>Compress (-z)</th>
-              <th>Init flag (-f)</th>
+              <th>Compress (-z) <button type="button" class="help-icon" data-help-key="compress" aria-label="Help: Compress" title="Compress (-z)">?</button></th>
+              <th>Init flag (-f) <button type="button" class="help-icon" data-help-key="init-flag" aria-label="Help: Init flag" title="Init flag (-f)">?</button></th>
               <th class="bss-col" style="display:none">BSS (-b)</th>
               <th>Actions</th>
             </tr>
@@ -79,18 +79,18 @@ window.addEventListener('error', function (e) {
       <div class="step-content">
         <div class="options-grid">
           <fieldset>
-            <legend>Output format</legend>
+            <legend>Output format <button type="button" class="help-icon" data-help-key="output-format" aria-label="Help: Output format" title="Output format">?</button></legend>
             <label><input type="radio" name="output" value="rom" checked> <code>.ROM</code> &mdash; standard cart</label>
             <label><input type="radio" name="output" value="stc"> <code>.STC</code> &mdash; STEem prefix (-s)</label>
             <label><input type="radio" name="output" value="diag"> Diagnostic cart (-d)</label>
           </fieldset>
           <fieldset>
-            <legend>Mode</legend>
+            <legend>Mode <button type="button" class="help-icon" data-help-key="mode" aria-label="Help: Mode" title="Mode">?</button></legend>
             <label><input type="radio" name="mode" value="default" checked> Default &mdash; stub loader</label>
             <label><input type="radio" name="mode" value="classic"> Classic (-c) &mdash; in-ROM</label>
           </fieldset>
           <fieldset style="grid-column: 1 / -1;">
-            <legend>Defaults for newly added programs</legend>
+            <legend>Defaults for newly added programs <button type="button" class="help-icon" data-help-key="globals" aria-label="Help: Defaults for newly added programs" title="Defaults for newly added programs">?</button></legend>
             <label>
               <input type="checkbox" id="globalCompress"> Compress (-z) by default
             </label>
@@ -126,7 +126,7 @@ window.addEventListener('error', function (e) {
     </li>
 
     <li id="step4" class="step">
-      <div class="step-header">Step 4/4 — Download <span class="step-status">Pending</span></div>
+      <div class="step-header">Step 4/4 — Download <button type="button" class="help-icon" data-help-key="download" aria-label="Help: Download" title="Download">?</button> <span class="step-status">Pending</span></div>
       <div class="step-content">
         <label>File name: <input type="text" id="outputName" size="32"></label>
         <a id="downloadLink" href="#" download="" style="display:none; margin-left:12px; padding:8px 14px; border-radius:6px; background:#fde047; color:#111827; font-weight:600; text-decoration:none;">Download</a>
