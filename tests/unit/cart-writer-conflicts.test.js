@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildCart } from '../../src/cart-writer.js';
 
 // Minimal "valid PRG" bytes for inputs that aren't supposed to reach
-// the parsing layer — the conflict checks fire first.
+// the parsing layer, the conflict checks fire first.
 function dummyPrg() {
   const buf = new Uint8Array(28 + 16);
   const v = new DataView(buf.buffer);

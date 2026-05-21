@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { lzssCompress, LZSS_MAX_MATCH, LZSS_WIN_SIZE } from '../../src/lzss.js';
 
-describe('lzssCompress — structural smoke', () => {
+describe('lzssCompress, structural smoke', () => {
   it('encodes a single literal byte', () => {
     // Single byte: flag = 0 (literal), then the byte itself. 2 bytes total.
     const out = lzssCompress(new Uint8Array([0x42]));
@@ -33,7 +33,7 @@ describe('lzssCompress — structural smoke', () => {
     // 144 zeros = LZSS_MAX_MATCH * 8. The first byte has no prior context
     // so it ships as a literal; that consumes a token in the first flag
     // block, leaving room for 7 max-length back-references (covering 126
-    // more bytes — total 127 consumed). The 17 remaining bytes form one
+    // more bytes, total 127 consumed). The 17 remaining bytes form one
     // back-ref of length 17 in a second flag block. Sizes:
     //   block 1: 1 flag + 1 literal + 7 * 2-byte back-refs  = 16 bytes
     //   block 2: 1 flag + 1 * 2-byte back-ref               =  3 bytes

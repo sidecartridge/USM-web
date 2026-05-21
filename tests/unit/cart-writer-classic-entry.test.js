@@ -25,7 +25,7 @@ function buildPrg({ text, reloc, absflag = 0 }) {
   return { buf, header };
 }
 
-describe('writeClassicEntry — default classic mode (with CA_HEADER)', () => {
+describe('writeClassicEntry, default classic mode (with CA_HEADER)', () => {
   it('lays out CA_HEADER + relocated TEXT', () => {
     const text = new Uint8Array(16);
     // 32-bit value at offset 4 = 8 (TEXT-internal pointer). The relocator
@@ -91,13 +91,13 @@ describe('writeClassicEntry — default classic mode (with CA_HEADER)', () => {
     expect(written).toBe(CA_HEADER_SIZE + 16); // 16, not 15
     // CA_SIZE = 16
     expect(view.getUint32(cartOffset + 16, false)).toBe(16);
-    // The extra (16th) byte should come from prg[PRG_HEADER_SIZE + 15] —
+    // The extra (16th) byte should come from prg[PRG_HEADER_SIZE + 15] -
     // the first byte of the reloc table, which is 0xAA.
     expect(cart[cartOffset + CA_HEADER_SIZE + 15]).toBe(0xAA);
   });
 });
 
-describe('writeClassicEntry — diagnostic mode (no CA_HEADER)', () => {
+describe('writeClassicEntry, diagnostic mode (no CA_HEADER)', () => {
   it('writes TEXT directly at offset, no header preamble', () => {
     const text = new Uint8Array(8);
     new DataView(text.buffer).setUint32(0, 0x4E714E71, false); // NOP NOP

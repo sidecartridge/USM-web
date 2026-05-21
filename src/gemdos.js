@@ -1,4 +1,4 @@
-// GEMDOS time/date and 8.3 filename helpers — match
+// GEMDOS time/date and 8.3 filename helpers, match
 // atarist-USM/usm.c:152-178 and the inline filename loop at usm.c:716-744.
 
 // GEMDOS time word: (hours << 11) | (minutes << 5) | (seconds / 2).
@@ -8,13 +8,13 @@
 // CA_TIME/CA_DATE depend on the host timezone. Goldens are generated
 // with TZ=UTC so byte-parity tests are reproducible; for stability in
 // JS we always read UTC fields from the Date argument. Production
-// (browser) gets UTC timestamps regardless of the user's locale — a
+// (browser) gets UTC timestamps regardless of the user's locale, a
 // deliberate divergence from the C tool's localtime() behavior, in
 // exchange for byte-stable output across hosts.
 //
 // Years outside [1980, 2107] are clamped (the C reference does the same
 // at usm.c:173-174). When `date` is null/undefined or non-Date the
-// caller gets the 1980-01-01 00:00:00 zero point — also matches the
+// caller gets the 1980-01-01 00:00:00 zero point, also matches the
 // C fallback when stat() fails.
 export function gemdosTimeDate(date) {
   let year, month, day, hour, minute, second;

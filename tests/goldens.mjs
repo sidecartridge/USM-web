@@ -28,11 +28,11 @@ const CLONE_DIR = join(HERE, '.upstream-clone');
 const CLONE_USM = join(CLONE_DIR, 'usm');
 
 // Resolve the upstream usm binary, in this priority order:
-//   1. tests/.upstream-clone/usm                — built earlier from the
+//   1. tests/.upstream-clone/usm               , built earlier from the
 //      pinned SHA; reused across runs.
-//   2. ../atarist-USM/usm                       — the contributor's
+//   2. ../atarist-USM/usm                      , the contributor's
 //      sibling working tree, when their HEAD matches the pinned SHA.
-//   3. clone + gcc-build at the pinned SHA      — the CI / fresh-clone
+//   3. clone + gcc-build at the pinned SHA     , the CI / fresh-clone
 //      path. Result lands in tests/.upstream-clone/usm.
 function findOrBuildUsmBinary() {
   if (existsSync(CLONE_USM)) {
@@ -58,7 +58,7 @@ function findOrBuildUsmBinary() {
 function cloneAndBuild() {
   console.log(`goldens: cloning ${PIN.upstreamRepo} @ ${PIN.upstreamCommit}`);
   rmSync(CLONE_DIR, { recursive: true, force: true });
-  // Shallow init + fetch a single commit — cheaper than `git clone` plus
+  // Shallow init + fetch a single commit, cheaper than `git clone` plus
   // `git checkout`, and doesn't need history we won't use.
   mkdirSync(CLONE_DIR, { recursive: true });
   execFileSync('git', ['init', '-q'], { cwd: CLONE_DIR, stdio: ['ignore', 'inherit', 'inherit'] });
@@ -95,7 +95,7 @@ function generateGolden(usmBin, combo, targetDir) {
   }
 
   // Run usm under TZ=UTC so localtime() in usm.c produces UTC-aligned
-  // CA_TIME / CA_DATE — same convention the JS port uses internally.
+  // CA_TIME / CA_DATE, same convention the JS port uses internally.
   // See "Determinism trap" in CLAUDE.md.
   execFileSync(usmBin, combo.args, {
     cwd: work,

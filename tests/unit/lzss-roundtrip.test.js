@@ -11,7 +11,7 @@ describe('lzssRoundtrip', () => {
   });
 
   it('produces a ratio that matches compressed / original * 100', () => {
-    const src = new Uint8Array(1024);  // all zeros — compresses well
+    const src = new Uint8Array(1024);  // all zeros, compresses well
     const { compressed, ratio } = lzssRoundtrip(src);
     expect(ratio).toBeCloseTo((compressed.length / src.length) * 100, 5);
   });

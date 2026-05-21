@@ -52,7 +52,7 @@ describe('formatLogLine', () => {
       payloadSize: 324,
       paddedSize: 324 + 34,
     });
-    expect(out).toBe('      Layout: default mode, stub + PRG — CA_HEADER at $FA0004, payload at $FA0026 (324 bytes)');
+    expect(out).toBe('      Layout: default mode, stub + PRG. CA_HEADER at $FA0004, payload at $FA0026 (324 bytes)');
   });
 
   it('formats a classic-mode layout event', () => {
