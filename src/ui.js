@@ -5,6 +5,7 @@
 
 import { buildCart, DEFAULT_BSS_ADDR } from './cart-writer.js';
 import { parsePrgHeader, PRG_MAX_FILE_SIZE } from './prg.js';
+import { HELP_CONTENT } from './help-content.js';
 
 const INIT_FLAG_OPTIONS = ['', '0', '1', '3', '5', '6', '7'];
 
@@ -45,6 +46,22 @@ export function formatSize(n) {
   return `${(n / 1024).toFixed(1)} KB`;
 }
 
+// Render a ? help icon that opens the modal keyed on `key`. Used both
+// from static template positions and from per-row table headers.
+export function helpIconHtml(key) {
+  const entry = HELP_CONTENT[key];
+  const label = entry ? entry.title : key;
+  return `<button type="button" class="help-icon" data-help-key="${key}" aria-label="Help: ${escapeAttr(label)}" title="${escapeAttr(label)}">?</button>`;
+}
+
+function escapeAttr(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 // ----- DOM bootstrap (skipped if `document` isn't available, e.g. in
 // node-only tests).
 if (typeof document !== 'undefined') {
@@ -71,7 +88,50 @@ function initUi() {
   wireStep3(state);
   wireStep4(state);
   wireLogToggle();
+  wireHelpModal();
   refreshAll(state);
+}
+
+// ----- help modal -----
+
+function wireHelpModal() {
+  const dialog = document.getElementById('helpModal');
+  if (!dialog) return;
+  const closeBtn = dialog.querySelector('.modal-close');
+  closeBtn.addEventListener('click', () => dialog.close());
+  // Backdrop click: when the user clicks the dialog at coordinates
+  // outside the visible panel, the event's target is the <dialog>
+  // itself (not a child). Compare directly to identify that case.
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+  // ESC-to-close is built into <dialog>; nothing extra to wire.
+
+  // Delegated click for every ? icon, regardless of where the icon
+  // lives (header, fieldset legend, table header, per-row, future).
+  const app = document.getElementById('app');
+  app.addEventListener('click', (e) => {
+    const btn = e.target.closest && e.target.closest('.help-icon[data-help-key]');
+    if (!btn) return;
+    openHelp(btn.dataset.helpKey);
+  });
+}
+
+function openHelp(key) {
+  const entry = HELP_CONTENT[key];
+  if (!entry) {
+    console.warn(`openHelp: no entry for key "${key}"`);
+    return;
+  }
+  document.getElementById('helpModalTitle').textContent = entry.title;
+  document.getElementById('helpModalBody').innerHTML = entry.html;
+  const dialog = document.getElementById('helpModal');
+  if (typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  } else {
+    // Very old browsers: fall back to setting the [open] attribute.
+    dialog.setAttribute('open', '');
+  }
 }
 
 // ----- feature detection -----

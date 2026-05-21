@@ -148,6 +148,16 @@ window.addEventListener('error', function (e) {
   <pre id="log"></pre>
 </div>
 
+<dialog id="helpModal" aria-labelledby="helpModalTitle">
+  <div class="modal-panel">
+    <header class="modal-header">
+      <h3 id="helpModalTitle"></h3>
+      <button type="button" class="modal-close" aria-label="Close help">&times;</button>
+    </header>
+    <div id="helpModalBody" class="modal-body"></div>
+  </div>
+</dialog>
+
 <script type="module">
 {{SCRIPT}}
 </script>
