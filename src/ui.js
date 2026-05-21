@@ -19,16 +19,54 @@ export function defaultOutputName(firstProgramName, output) {
   return stem.toUpperCase() + ext;
 }
 
-// Format a log event from cart-writer's onLogLine into the same text
-// the C tool prints. Matches usm.c:642-657.
+// Format a log event from cart-writer's onLogLine into one line of
+// console-style output. The compressed / fallback line shapes match
+// the C tool's stdout; the program-start / header / layout / fixups
+// / summary shapes are USM-web verbose extensions.
 export function formatLogLine(event) {
-  if (event.type === 'compressed') {
-    return `      + ${event.name}: compressed ${event.origSize} -> ${event.compSize} (${event.dataRatio.toFixed(1)}%)`;
+  switch (event.type) {
+    case 'program-start':
+      return `==> [${event.index}/${event.total}] ${event.name}`;
+    case 'header':
+      return `      PRG header: tsize=${event.tsize} dsize=${event.dsize} bsize=${event.bsize} ssize=${event.ssize} prgflags=0x${event.prgflags.toString(16)} absflag=${event.absflag}`;
+    case 'layout': {
+      const payload = formatAddr(event.payloadAddr);
+      const padded = event.paddedSize === event.payloadSize + (event.diagnostic ? 0 : 34)
+        ? ''
+        : `, padded to ${event.paddedSize}`;
+      if (event.diagnostic) {
+        return `      Layout: diagnostic mode, TEXT+DATA at ${payload} (${event.payloadSize} bytes, no CA_HEADER)${padded}`;
+      }
+      const header = formatAddr(event.caHeaderAddr);
+      const label = event.mode === 'classic'
+        ? 'classic mode, TEXT+DATA'
+        : event.mode === 'compressed'
+          ? 'compressed mode, stub + size + payload'
+          : 'default mode, stub + PRG';
+      return `      Layout: ${label} — CA_HEADER at ${header}, payload at ${payload} (${event.payloadSize} bytes)${padded}`;
+    }
+    case 'fixups':
+      if (event.count === 0) {
+        return `      Relocations: none (program has ABSFLAG set or empty reloc table)`;
+      }
+      return `      Relocations: ${event.count} fixup${event.count === 1 ? '' : 's'} applied (BSS base ${formatAddr(event.bssAddr)})`;
+    case 'compressed':
+      return `      + ${event.name}: compressed ${event.origSize} -> ${event.compSize} (${event.dataRatio.toFixed(1)}%)`;
+    case 'fallback':
+      return `      + ${event.name}: no savings (${event.entryRatio.toFixed(0)}% entry), shipping uncompressed`;
+    case 'summary': {
+      const prog = `${event.programCount} program${event.programCount === 1 ? '' : 's'}`;
+      const fill = `${event.usmFillBytes} bytes USM!-fill remaining`;
+      const steem = event.steem ? ' (.STC: 4-byte prefix + 128 KB cart)' : '';
+      return `==> Cart ready: ${event.totalBytes} bytes, ${prog}, ${fill}${steem}`;
+    }
+    default:
+      return `      + ${event.name ?? '(event)'}`;
   }
-  if (event.type === 'fallback') {
-    return `      + ${event.name}: no savings (${event.entryRatio.toFixed(0)}% entry), shipping uncompressed`;
-  }
-  return `      + ${event.name}`;
+}
+
+function formatAddr(n) {
+  return '$' + (n >>> 0).toString(16).toUpperCase().padStart(6, '0');
 }
 
 // Parse a hex BSS address (e.g. "20000" -> 0x20000). Returns null on
@@ -410,8 +448,11 @@ function doBuild(state) {
 
   clearLog();
   setProgress(0);
-  appendLogLine('==> Building cart');
 
+  // Progress ticks once per program-start event so the bar advances at
+  // the start of each entry (not at the end). With one program that
+  // jumps 0 -> 100 immediately, which is fine; with N programs the
+  // bar steps 1/N at a time.
   let done = 0;
   try {
     state.builtCart = buildCart({
@@ -422,12 +463,13 @@ function doBuild(state) {
       globalBssAddr,
       onLogLine: (event) => {
         appendLogLine(formatLogLine(event));
-        done++;
-        setProgress(Math.round((done / resolvedPrograms.length) * 100));
+        if (event.type === 'program-start') {
+          done++;
+          setProgress(Math.round((done / resolvedPrograms.length) * 100));
+        }
       },
     });
     setProgress(100);
-    appendLogLine(`==> Cart ready (${state.builtCart.length} bytes)`);
   } catch (err) {
     appendLogLine(`!! Build failed: ${err.message}`);
     state.builtCart = null;

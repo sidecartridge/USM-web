@@ -194,6 +194,8 @@ export function writeCompressedEntry(view, offset, prgBytes, compressed, opts) {
 //
 // Returns the number of bytes written from `offset` (== CA_HEADER_SIZE
 // + program_size unless diagnostic, in which case program_size only).
+// Returns { bytesWritten, fixups }. The fixups count is what the
+// verbose log shows.
 export function writeClassicEntry(view, offset, prgBuf, prgHeader, opts) {
   const { name, initFlagDigit, mtime, nextEntryAddr, bssAddr, diagnostic } = opts;
   if (!(prgBuf instanceof Uint8Array)) {
@@ -235,9 +237,9 @@ export function writeClassicEntry(view, offset, prgBuf, prgHeader, opts) {
   programDst.set(prgBuf.subarray(PRG_HEADER_SIZE, PRG_HEADER_SIZE + program_size));
 
   // Apply in-place relocations against the cart-resident copy.
-  relocateTextData(view, programOffsetInCart, prgBuf, prgHeader, bssAddr);
+  const fixups = relocateTextData(view, programOffsetInCart, prgBuf, prgHeader, bssAddr);
 
-  return bytesWritten;
+  return { bytesWritten, fixups };
 }
 
 // Build a complete cart image from a list of programs. v1 scope: default
@@ -310,34 +312,38 @@ export function buildCart({
       const paddedSize = (entrySize + 1) & ~1;
       return { ...p, header, kind: 'classic', entrySize, paddedSize };
     }
-    // Non-classic: default or compressed.
+    // Non-classic: default or compressed. Parse the header up front for
+    // the verbose log (the entry writers themselves don't need it for
+    // the default/compressed paths, but the user wants to see it).
+    const header = parsePrgHeader(p.bytes);
     let kind = 'default';
     let compressed = null;
     let payloadSize = PRG_LOADER.length + p.bytes.length;
+    let compressionEvent = null;
     if (p.compress) {
       const result = tryCompress(p.bytes);
       if (result.kind === 'compressed') {
         kind = 'compressed';
         compressed = result.compressed;
         payloadSize = PRG_LOADER_COMPRESSED.length + 4 + compressed.length;
-        onLogLine?.({
+        compressionEvent = {
           type: 'compressed',
           name: p.name,
           origSize: p.bytes.length,
           compSize: compressed.length,
           dataRatio: result.dataRatio,
-        });
+        };
       } else {
-        onLogLine?.({
+        compressionEvent = {
           type: 'fallback',
           name: p.name,
           entryRatio: result.entryRatio,
-        });
+        };
       }
     }
     const entrySize = CA_HEADER_SIZE + payloadSize;
     const paddedSize = (entrySize + 1) & ~1;
-    return { ...p, kind, compressed, entrySize, paddedSize };
+    return { ...p, header, kind, compressed, entrySize, paddedSize, compressionEvent };
   });
 
   // Write each entry. CA_NEXT for entry i points at where entry i+1's
@@ -359,11 +365,44 @@ export function buildCart({
       nextEntryAddr,
     };
 
+    // Per-program verbose log: announce, header fields, layout, then
+    // any pre-computed compression event for this program.
+    onLogLine?.({ type: 'program-start', name: e.name, index: i + 1, total: entryPlans.length });
+    onLogLine?.({
+      type: 'header',
+      name: e.name,
+      tsize: e.header.tsize,
+      dsize: e.header.dsize,
+      bsize: e.header.bsize,
+      ssize: e.header.ssize,
+      prgflags: e.header.prgflags,
+      absflag: e.header.absflag,
+    });
+    const caHeaderAddr = diagnostic ? null : (CART_ROM_BASE + offset) >>> 0;
+    const payloadAddr = (CART_ROM_BASE + offset + (diagnostic ? 0 : CA_HEADER_SIZE)) >>> 0;
+    onLogLine?.({
+      type: 'layout',
+      name: e.name,
+      mode: e.kind,
+      diagnostic,
+      caHeaderAddr,
+      payloadAddr,
+      payloadSize: e.entrySize - (diagnostic ? 0 : CA_HEADER_SIZE),
+      paddedSize: e.paddedSize,
+    });
+    if (e.compressionEvent) onLogLine?.(e.compressionEvent);
+
     if (e.kind === 'classic') {
-      writeClassicEntry(view, offset, e.bytes, e.header, {
+      const { fixups } = writeClassicEntry(view, offset, e.bytes, e.header, {
         ...baseOpts,
         bssAddr: e.bssAddr ?? globalBssAddr,
         diagnostic,
+      });
+      onLogLine?.({
+        type: 'fixups',
+        name: e.name,
+        count: fixups,
+        bssAddr: e.bssAddr ?? globalBssAddr,
       });
     } else if (e.kind === 'compressed') {
       writeCompressedEntry(view, offset, e.bytes, e.compressed, baseOpts);
@@ -373,12 +412,37 @@ export function buildCart({
     offset += e.paddedSize;
   }
 
+  // Final summary. usmFillBytes is the count of cart bytes at the tail
+  // still matching the cyclic USM! pattern at their offsets — bytes
+  // overwritten by entries (or by entries' padding zero) don't count.
+  const usmFillBytes = countTrailingUsmFill(cart);
+  onLogLine?.({
+    type: 'summary',
+    totalBytes: CART_SIZE + (steem ? STEEM_PREFIX_SIZE : 0),
+    programCount: entryPlans.length,
+    usmFillBytes,
+    steem,
+  });
+
   if (steem) {
     const prefixed = new Uint8Array(STEEM_PREFIX_SIZE + CART_SIZE);
     prefixed.set(cart, STEEM_PREFIX_SIZE);
     return prefixed;
   }
   return cart;
+}
+
+// Count trailing bytes of the cart that still match the cyclic USM!
+// pattern at their respective offsets. Used by the verbose log's
+// summary line to report how much of the cart is unused fill.
+function countTrailingUsmFill(cart) {
+  const pat = [0x55, 0x53, 0x4D, 0x21]; // 'U' 'S' 'M' '!'
+  let count = 0;
+  for (let i = cart.length - 1; i >= 0; i--) {
+    if (cart[i] !== pat[i & 3]) break;
+    count++;
+  }
+  return count;
 }
 
 // Fill the 128 KB cart buffer with the literal "USM!" pattern (cyclic

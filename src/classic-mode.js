@@ -13,12 +13,16 @@
 import { walkRelocations } from './prg.js';
 import { CART_ROM_BASE } from './cart-writer.js';
 
+// Returns the number of fixups applied (0 when ABSFLAG short-circuits
+// the pass or when the PRG has the alt-encoded no-fixups first LONG).
+// The count feeds the verbose log line for classic-mode entries.
 export function relocateTextData(view, programOffsetInCart, prgBuf, prgHeader, bssAddr) {
-  if (prgHeader.absflag !== 0) return; // no fixups requested
+  if (prgHeader.absflag !== 0) return 0; // no fixups requested
 
   const programSize = prgHeader.tsize + prgHeader.dsize;
   const programStartAddr = (CART_ROM_BASE + programOffsetInCart) >>> 0;
 
+  let applied = 0;
   walkRelocations(prgBuf, prgHeader, (offsetInTextData) => {
     const cartOffset = programOffsetInCart + offsetInTextData;
     const original = view.getUint32(cartOffset, /*littleEndian*/ false);
@@ -26,5 +30,7 @@ export function relocateTextData(view, programOffsetInCart, prgBuf, prgHeader, b
       ? (programStartAddr + original) >>> 0
       : (bssAddr + original - programSize) >>> 0;
     view.setUint32(cartOffset, rewritten, /*littleEndian*/ false);
+    applied++;
   });
+  return applied;
 }

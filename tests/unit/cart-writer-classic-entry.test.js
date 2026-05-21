@@ -38,7 +38,7 @@ describe('writeClassicEntry — default classic mode (with CA_HEADER)', () => {
     const cart = new Uint8Array(cartOffset + CA_HEADER_SIZE + 16 + 16).fill(0xCC);
     const view = new DataView(cart.buffer);
 
-    const written = writeClassicEntry(view, cartOffset, prg, header, {
+    const { bytesWritten: written } = writeClassicEntry(view, cartOffset, prg, header, {
       name: 'reloc.prg',
       initFlagDigit: null,
       mtime: FIXED_MTIME,
@@ -79,7 +79,7 @@ describe('writeClassicEntry — default classic mode (with CA_HEADER)', () => {
     const cart = new Uint8Array(cartOffset + CA_HEADER_SIZE + 16 + 4).fill(0xDD);
     const view = new DataView(cart.buffer);
 
-    const written = writeClassicEntry(view, cartOffset, prg, header, {
+    const { bytesWritten: written } = writeClassicEntry(view, cartOffset, prg, header, {
       name: 'odd.prg',
       initFlagDigit: null,
       mtime: FIXED_MTIME,
@@ -108,7 +108,7 @@ describe('writeClassicEntry — diagnostic mode (no CA_HEADER)', () => {
     const cart = new Uint8Array(64).fill(0xEE);
     const view = new DataView(cart.buffer);
 
-    const written = writeClassicEntry(view, cartOffset, prg, header, {
+    const { bytesWritten: written } = writeClassicEntry(view, cartOffset, prg, header, {
       name: 'diag.prg',  // ignored in diagnostic
       initFlagDigit: null,
       mtime: FIXED_MTIME,
