@@ -1671,12 +1671,7 @@ function formatLogLine(event) {
 }
 
 function formatAddr(n) {
-  return '
-</script>
-
-</body>
-</html>
- + (n >>> 0).toString(16).toUpperCase().padStart(6, '0');
+  return '$' + (n >>> 0).toString(16).toUpperCase().padStart(6, '0');
 }
 
 // Parse a hex BSS address (e.g. "20000" -> 0x20000). Returns null on
