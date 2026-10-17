@@ -81,10 +81,18 @@
                                     value: 'necessary',
                                     enabled: true,
                                     readonly: true          // cookie categories with readonly=true are all treated as "necessary cookies"
-                                }
+                                },
+                                cookie_table: [
+                                    {
+                                        col1: 'cc_cookie',
+                                        col2: '.sidecartridge.com',
+                                        col3: '6 months',
+                                        col4: 'Stores your cookie choice for sidecartridge.com and its subdomains.'
+                                    }
+                                ]
                             }, {
                                 title: 'Performance and Analytics cookies',
-                                description: 'These cookies allow the website to remember the choices you have made in the past',
+                                description: 'Google Analytics 4 cookies, used to understand how visitors use the site. Only set if you accept this category.',
                                 toggle: {
                                     value: 'analytics',     // your cookie category
                                     enabled: false,
@@ -92,17 +100,16 @@
                                 },
                                 cookie_table: [             // list of all expected cookies
                                     {
-                                        col1: '^_ga',       // match all cookies starting with "_ga"
-                                        col2: 'google.com',
+                                        col1: '_ga',
+                                        col2: '.sidecartridge.com',
                                         col3: '2 years',
-                                        col4: 'description ...',
-                                        is_regex: true
+                                        col4: 'Google Analytics 4: distinguishes visitors.'
                                     },
                                     {
-                                        col1: '_gid',
-                                        col2: 'google.com',
-                                        col3: '1 day',
-                                        col4: 'description ...',
+                                        col1: '_ga_6VT9RXTJ2N',
+                                        col2: '.sidecartridge.com',
+                                        col3: '2 years',
+                                        col4: 'Google Analytics 4: keeps the session state.'
                                     }
                                 ]
                             },
